@@ -16,3 +16,6 @@
 2026-05-14 16:23:21.799 ERROR: [email:System] [location:Response] [procType:errorResponse] [log:"categories validation failed: name: Path `name` is required."]
 2026-05-14 16:32:02.682 ERROR: [email:System] [location:node_modules/mongoose/lib/document.js:2864] [procType:system_error] [log:"categories validation failed: name: Path `name` is required."]
 2026-05-14 16:32:45.366 ERROR: [email:System] [location:routes/categories.js:31] [procType:system_error] [log:"Cannot read properties of undefined (reading 'id')"]
+2026-05-14 17:20:15.734 ERROR: [email:System] [location:routes/users.js:245] [procType:system_error] [log:"Cannot destructure property 'email' of 'req.body' as it is undefined."]
+2026-05-14 17:24:40.195 ERROR: [email:System] [location:routes/users.js:253] [procType:system_error] [log:"user.validPassword is not a function"]
+2026-05-14 17:25:51.788 ERROR: [email:System] [location:node_modules/bcrypt/bcrypt.js:162] [procType:system_error] [log:"data and hash arguments required"]

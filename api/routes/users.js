@@ -1,12 +1,13 @@
 var express = require('express');
 const bcrypt = require('bcrypt');
-
+const jwt = require('jwt-simple');
 const Response = require('../lib/Response');
 const { HTTP_CODES, PASSWORD_RULES, SUPER_ADMIN } = require('../config/Enum');
 const CustomError = require('../lib/Error');
 const Users = require('../db/models/Users');
 const Roles = require('../db/models/Roles');
 const UserRoles = require('../db/models/UserRoles');
+const config = require('../config');
 
 var router = express.Router();
 
@@ -235,6 +236,46 @@ router.post('/register', async (req, res) => {
     res.status(errorResponse.code).json(errorResponse);
   }
 
+});
+
+router.post('/auth', async (req, res) => {
+
+  try {
+
+    let { email, password } = req.body;
+
+    Users.validateFieldsBeforeAuth(email, password);
+
+    let user = await Users.findOne({ email: email });
+
+    if (!user) throw new CustomError(HTTP_CODES.UNAUTHORIZED, 'Email or password is invalid');
+    
+    if (!Users.validPassword(user, password)) throw new CustomError(HTTP_CODES.UNAUTHORIZED, 'Email or password is invalid');
+
+    let payload = {
+      id: user._id,
+      exp: parseInt(Date.now() / 1000) + parseInt(config.JWT.EXPIRE_TIME)
+    };
+
+    let token = jwt.encode(payload, config.JWT.SECRET);
+
+    let userData = {
+      _id: user._id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone_number: user.phone_number,
+    };
+
+    res.json(Response.successResponse(HTTP_CODES.OK, {
+      user: userData,
+      token: token
+    }));
+
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    res.status(errorResponse.code).json(errorResponse);
+  }
 });
 
 
