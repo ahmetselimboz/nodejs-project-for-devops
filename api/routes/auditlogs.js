@@ -3,10 +3,16 @@ const AuditLogs = require('../db/models/AuditLogs');
 const Response = require('../lib/Response');
 const { HTTP_CODES } = require('../config/Enum');
 const moment = require('moment');
+
+
 var router = express.Router();
+const auth = require('../lib/auth')();
+
+
+router.use(auth.authenticate());
 
 /* GET users listing. */
-router.post('/', async (req, res) => {
+router.post('/', auth.checkRoles('auditlogs_view'), async (req, res) => {
   try {
     let body = req.body;
     let query = {};
@@ -41,7 +47,7 @@ router.post('/', async (req, res) => {
     res.json(Response.successResponse(HTTP_CODES.OK, auditLogs, count));
 
   } catch (error) {
-    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });

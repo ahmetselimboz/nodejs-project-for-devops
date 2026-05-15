@@ -9,6 +9,7 @@ var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var Response = require('./lib/Response');
 var { HTTP_CODES } = require('./config/Enum');
+var CustomError = require('./lib/Error');
 
 var app = express();
 
@@ -26,12 +27,13 @@ app.use('/api', require('./routes/index'));
 
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  next(createError(404));
+app.use(function(req, res) {
+  return res.sendStatus(404);
 });
 
 // error handler
 app.use(function(err, req, res) {
+
   // set locals, only providing error in development
 
   res.locals.message = err.message;
@@ -39,7 +41,7 @@ app.use(function(err, req, res) {
 
   // render the error page
   res.status(err.status || 500);
-  return res.json(Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, err));
+  return res.json(Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, err, req.user?.language));
 });
 
 module.exports = app;

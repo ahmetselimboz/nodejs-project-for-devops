@@ -8,27 +8,42 @@ const Response = require('../lib/Response');
 const { HTTP_CODES } = require('../config/Enum');
 const CustomError = require('../lib/Error');
 const rolePrivileges = require('../config/role_privileges');
+const auth = require('../lib/auth')();
+const I18n = require('../lib/i18n');
+
+const i18n = new I18n();
+
+router.use(auth.authenticate());
 
 /* GET users listing. */
-router.get('/', async (req, res) => {
+router.get('/', auth.checkRoles('role_view'), async (req, res) => {
   try {
     const roles = await Roles.find();
-    res.json(Response.successResponse(HTTP_CODES.OK, roles));
+    let rolePrivileges = await RolePrivileges.find({ });
+    let roleData = roles.map(role => {
+      return {
+        _id: role._id,
+        role_name: role.role_name,
+        permissions: rolePrivileges.filter(rp => rp.role_id.toString() === role._id.toString()).map(rp => rp.permission)
+      };
+    });
+    res.json(Response.successResponse(HTTP_CODES.OK, roleData));
   } catch (error) {
-    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });
 
 
-router.post('/add', async (req, res) => {
+router.post('/add', auth.checkRoles('role_add'), async (req, res) => {
   let body = req.body;
   try {
+    let lang = req.user?.language;
     if (!body.role_name) {
-      throw new CustomError(HTTP_CODES.BAD_REQUEST, 'Validation Error', 'Role name is required');
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('ROLES.ROLE_NAME_REQUIRED', lang));
     }
     if (!body.permissions || !Array.isArray(body.permissions) || body.permissions.length === 0) {
-      throw new CustomError(HTTP_CODES.BAD_REQUEST, 'Validation Error', 'Permissions are required');
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('ROLES.PERMISSIONS_REQUIRED', lang));
     }
 
     let role = new Roles({
@@ -47,22 +62,23 @@ router.post('/add', async (req, res) => {
       await rolePrivilege.save();
     }
 
-    res.json(Response.successResponse(HTTP_CODES.CREATED, 'Role created successfully'));
+    res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('ROLES.CREATE_SUCCESS', lang)));
   } catch (error) {
-    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });
 
-router.post('/update', async (req, res) => {
+router.post('/update', auth.checkRoles('role_update'), async (req, res) => {
   let body = req.body;
   try {
+    let lang = req.user?.language;
     let updates = {};
     if (!body._id) {
-      throw new CustomError(HTTP_CODES.BAD_REQUEST, 'Validation Error', '_id is required');
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
     }
     if (!body.role_name) {
-      throw new CustomError(HTTP_CODES.BAD_REQUEST, 'Validation Error', 'Role name is required');
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('ROLES.ROLE_NAME_REQUIRED', lang));
     }
 
     if (body.role_name) updates.role_name = body.role_name;
@@ -94,39 +110,40 @@ router.post('/update', async (req, res) => {
     let role = await Roles.findByIdAndUpdate(body._id, updates, { new: true });
 
     if (!role) {
-      throw new CustomError(HTTP_CODES.NOT_FOUND, 'Role not found');
+      throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('ROLES.NOT_FOUND', lang));
     }
 
-    res.json(Response.successResponse(HTTP_CODES.OK, 'Role updated successfully'));
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.UPDATE_SUCCESS', lang)));
   } catch (error) {
-    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });
 
-router.post('/delete', async (req, res) => {
+router.post('/delete', auth.checkRoles('role_delete'), async (req, res) => {
   let body = req.body;
   try {
+    let lang = req.user?.language;
     if (!body._id) {
-      throw new CustomError(HTTP_CODES.BAD_REQUEST, 'Validation Error', '_id is required');
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
     }
 
     await Roles.findByIdAndDelete(body._id);
 
-    res.json(Response.successResponse(HTTP_CODES.OK, 'Role deleted successfully'));
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.DELETE_SUCCESS', lang)));
 
   } catch (error) {
-    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });
 
-router.get('/role-privileges', async (req, res) => {
+router.get('/role-privileges', auth.checkRoles('role_view'), async (req, res) => {
   try {
 
     res.json(Response.successResponse(HTTP_CODES.OK, rolePrivileges));
   } catch (error) {
-    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error);
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
     res.status(errorResponse.code).json(errorResponse);
   }
 });

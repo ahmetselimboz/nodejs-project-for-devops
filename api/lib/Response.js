@@ -2,6 +2,9 @@ const path = require('path');
 const { HTTP_CODES } = require('../config/Enum');
 const CustomError = require('./Error');
 const LoggerClass = require('./logger/logger');
+const I18n = require('./i18n');
+
+const i18n = new I18n();
 
 const PROJECT_ROOT = path.resolve(__dirname, '..');
 
@@ -33,7 +36,7 @@ class Response {
         }
     }
 
-    static errorResponse(code, error){
+    static errorResponse(code, error, lang){
 
         
 
@@ -46,13 +49,13 @@ class Response {
                     description: error.description
                 }
             }
-        }else if(error.message.includes('E11000')){
+        }else if(error.message?.includes('E11000')){
             return {
                 code: HTTP_CODES.CONFLICT,
                 success: false,
                 error:{
-                    message: 'Already exists!',
-                    description: "The record you are trying to create already exists."
+                    message: i18n.translate('COMMON.ALREADY_EXISTS', lang),
+                    description: i18n.translate('COMMON.ALREADY_EXISTS_DESCRIPTION', lang)
                 }
             }
         }
@@ -61,7 +64,7 @@ class Response {
             code: HTTP_CODES.INT_SERVER_ERROR,
             success: false,
             error:{
-                message: 'Internal Server Error',
+                message: i18n.translate('COMMON.INTERNAL_SERVER_ERROR', lang),
                 description: error.message
             }
         }

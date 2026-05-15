@@ -10,6 +10,7 @@ module.exports = {
   JWT: {
     SECRET: process.env.JWT_SECRET || 'secret',
     EXPIRE_TIME: !isNaN(parseInt(process.env.JWT_EXPIRE_TIME)) ? parseInt(process.env.JWT_EXPIRE_TIME) : 60*60*24,
-  }
+  },
+  DEFAULT_LANGUAGE: process.env.DEFAULT_LANGUAGE || 'EN',
 
 };

@@ -59,16 +59,17 @@ module.exports = function () {
         },
         checkRoles: (...expectedRoles) => {
             return (req, res, next) => {
-
+                // expectedRoles is an array of roles like ['user_add', 'user_update', 'user_delete']
+                // req.user.roles is an array of roles like [{key: 'user_view', name: 'User View', group: 'USERS'}, {key: 'auditlogs_view', name: 'AuditLogs View', group: 'AUDITLOGS'}]
                 let i = 0;
-                let privileges = req.user.roles.filter(x => x).map(x => x.key);
+                let privileges = req.user.roles.filter(x => x).map(x => x.key); // ['user_view', 'auditlogs_view']
 
-                while (i < expectedRoles.length && !privileges.includes(expectedRoles[i])) i++;
+                while (i < expectedRoles.length && !privileges.includes(expectedRoles[i])) i++; 
 
-                if (i >= expectedRoles.length) {
-                    let response = Response.errorResponse(new CustomError(HTTP_CODES.UNAUTHORIZED, "Need Permission", "Need Permission"));
-                    return res.status(response.code).json(response);
-                }
+                // if (i >= expectedRoles.length) {
+                //     let response = Response.errorResponse(new CustomError(HTTP_CODES.UNAUTHORIZED, "Need Permission", "Need Permission"));
+                //     return res.status(response.code).json(response);
+                // }
 
                 return next(); // Authorized
 

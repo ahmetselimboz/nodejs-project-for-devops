@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const { PASSWORD_RULES, HTTP_CODES } = require('../../config/Enum');
+const config = require('../../config');
 const CustomError = require('../../lib/Error');
+const I18n = require('../../lib/i18n');
+
+const i18n = new I18n();
 const bcrypt = require('bcrypt');
 
 const schema = mongoose.Schema({
@@ -19,6 +23,10 @@ const schema = mongoose.Schema({
     is_active: {
         type: Boolean,
         default: true,
+    },
+    language: {
+        type: String,
+        default: config.DEFAULT_LANGUAGE,
     }
 }, { timestamps: {
     createdAt: 'created_at',
@@ -28,22 +36,25 @@ const schema = mongoose.Schema({
 
 class Users extends mongoose.Model {
 
-    static validPassword(user, password) {
-        return bcrypt.compareSync(password, user.password);
+    validPassword(password) {
+        return bcrypt.compareSync(password, this.password);
     }
 
-    static validateFieldsBeforeAuth(email, password) {
+    static validateFieldsBeforeAuth(email, password, lang) {
+        let message = i18n.translate('COMMON.VALIDATION_ERROR', lang);
+        let description = i18n.translate('USERS.EMAIL_OR_PASSWORD_INVALID', lang);
+
         if(typeof password !== 'string' || password.length < PASSWORD_RULES.MIN_LENGTH ) {
-            throw new CustomError(HTTP_CODES.UNAUTHORIZED, 'Validation Error', `Email or password is invalid`);
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
         }
         if(typeof email !== 'string' || !email.includes('@') || !email.includes('.')) {
-            throw new CustomError(HTTP_CODES.UNAUTHORIZED, 'Validation Error', `Email or password is invalid`);
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
         }
         if(email.length > 255) {
-            throw new CustomError(HTTP_CODES.UNAUTHORIZED, 'Validation Error', `Email or password is invalid`);
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
         }
         if(password.length > 255) {
-            throw new CustomError(HTTP_CODES.UNAUTHORIZED, 'Validation Error', `Email or password is invalid`);
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
         }
         return null;
     }
