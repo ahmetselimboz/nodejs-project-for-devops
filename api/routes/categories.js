@@ -101,6 +101,7 @@ router.post('/delete', auth.checkRoles('category_delete'), async (req, res) => {
             throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('CATEGORIES.NOT_FOUND', lang));
         }
         Auditlogs.info(req.user?.email, 'Categories', 'delete', {_id:body._id});
+        LoggerClass.info(req.user?.email, 'Categories', 'delete', {_id:body._id});
         res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('CATEGORIES.DELETE_SUCCESS', lang)));
     } catch (error) {
         let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);

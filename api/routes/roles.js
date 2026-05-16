@@ -10,6 +10,8 @@ const CustomError = require('../lib/Error');
 const rolePrivileges = require('../config/role_privileges');
 const auth = require('../lib/auth')();
 const I18n = require('../lib/i18n');
+const Auditlogs = require('../lib/Auditlogs');
+const LoggerClass = require('../lib/logger/logger');
 
 const i18n = new I18n();
 
@@ -27,6 +29,9 @@ router.get('/', auth.checkRoles('role_view'), async (req, res) => {
         permissions: rolePrivileges.filter(rp => rp.role_id.toString() === role._id.toString()).map(rp => rp.permission)
       };
     });
+
+
+
     res.json(Response.successResponse(HTTP_CODES.OK, roleData));
   } catch (error) {
     let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
@@ -54,13 +59,21 @@ router.post('/add', auth.checkRoles('role_add'), async (req, res) => {
 
 
     for (let permission of body.permissions) {
-      let rolePrivilege = new RolePrivileges({
+      let rolePrivileges = new RolePrivileges({
         role_id: role._id,
         permission: permission,
         created_by: req.user?.id
       });
-      await rolePrivilege.save();
+      await rolePrivileges.save();
     }
+
+    let roleData = {
+      role,
+      rolePrivileges
+    }
+
+    Auditlogs.info(req.user?.email, 'Roles', 'add', roleData);
+    LoggerClass.info(req.user?.email, 'Roles', 'add', roleData);
 
     res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('ROLES.CREATE_SUCCESS', lang)));
   } catch (error) {
@@ -109,6 +122,9 @@ router.post('/update', auth.checkRoles('role_update'), async (req, res) => {
 
     let role = await Roles.findByIdAndUpdate(body._id, updates, { new: true });
 
+    Auditlogs.info(req.user?.email, 'Roles', 'update', updates);
+    LoggerClass.info(req.user?.email, 'Roles', 'update', updates);
+
     if (!role) {
       throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('ROLES.NOT_FOUND', lang));
     }
@@ -129,6 +145,9 @@ router.post('/delete', auth.checkRoles('role_delete'), async (req, res) => {
     }
 
     await Roles.findByIdAndDelete(body._id);
+
+    Auditlogs.info(req.user?.email, 'Roles', 'delete', {id: body._id});
+    LoggerClass.info(req.user?.email, 'Roles', 'delete', {id: body._id});
 
     res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.DELETE_SUCCESS', lang)));
 

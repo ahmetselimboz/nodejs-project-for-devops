@@ -41,9 +41,9 @@ router.post('/', auth.checkRoles('auditlogs_view'), async (req, res) => {
       query.created_at = { $gte: moment().subtract(1, 'day').toDate(), $lte: moment().toDate() };
     }
 
-
     let count = await AuditLogs.countDocuments(query);
     let auditLogs = await AuditLogs.find(query).skip(skip).limit(limit).sort(sort).select(select).populate(populate);
+
     res.json(Response.successResponse(HTTP_CODES.OK, auditLogs, count));
 
   } catch (error) {

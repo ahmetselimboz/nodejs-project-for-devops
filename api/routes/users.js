@@ -11,6 +11,8 @@ const RolePrivileges = require('../db/models/RolePrivileges');
 const config = require('../config');
 const auth = require('../lib/auth')();
 const I18n = require('../lib/i18n');
+const Auditlogs = require('../lib/Auditlogs');
+const LoggerClass = require('../lib/logger/logger');
 
 const i18n = new I18n();
 
@@ -268,6 +270,9 @@ router.post('/add', auth.checkRoles('user_add'), async (req, res) => {
       await userRole.save();
     }
 
+    Auditlogs.info(req.user?.email, 'Users', 'add', user);
+    LoggerClass.info(req.user?.email, 'Users', 'add', user);
+
     res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language)));
   } catch (error) {
     let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
@@ -340,6 +345,10 @@ router.post('/update', auth.checkRoles('user_update'), async (req, res) => {
     if (!user) {
       throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('USERS.USER_NOT_FOUND', lang));
     }
+
+    Auditlogs.info(req.user?.email, 'Users', 'update', user);
+    LoggerClass.info(req.user?.email, 'Users', 'update', user);
+
     res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('USERS.UPDATE_SUCCESS', lang)));
   } catch (error) {
     let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
@@ -357,6 +366,10 @@ router.post('/delete', auth.checkRoles('user_delete'), async (req, res) => {
     }
     await Users.findByIdAndDelete(body._id);
     await UserRoles.deleteMany({ user_id: body._id });
+
+    Auditlogs.info(req.user?.email, 'Users', 'delete', {id: body._id});
+    LoggerClass.info(req.user?.email, 'Users', 'delete', {id: body._id});
+    
     res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('USERS.DELETE_SUCCESS', lang)));
   } catch (error) {
     let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
