@@ -8,7 +8,8 @@
   },
   "scripts": {
     "start": "node ./bin/www",
-    "dev": "nodemon ./bin/www"
+    "dev": "nodemon ./bin/www",
+    "test": "jest --runInBand --detectOpenHandles --forceExit"
   },
   "keywords": [],
   "author": "",
@@ -37,6 +38,9 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "eslint": "^10.3.0",
-    "globals": "^17.6.0"
+    "globals": "^17.6.0",
+    "jest": "^30.4.2",
+    "mongodb-memory-server": "^11.1.0",
+    "supertest": "^7.2.2"
   }
 }

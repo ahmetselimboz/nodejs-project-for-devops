@@ -1,0 +1,107 @@
+# Node.js REST API Proje Özeti (NotebookLM İçin)
+
+## 1. Projenin Amacı ve Genel Bakış
+Bu proje, Node.js ve Express.js kullanılarak geliştirilmiş, DevOps süreçlerine veya genel kullanıma uygun, modüler ve ölçeklenebilir bir **REST API** backend sistemidir. Proje temel olarak; JWT tabanlı kimlik doğrulama, Rol Bazlı Erişim Kontrolü (RBAC), detaylı hata yönetimi (Custom Error/Response), çoklu dil (i18n) desteği ve sistem denetim günlükleri (Audit Logging) gibi kurumsal düzeyde özellikler barındırmaktadır. Tüm kaynak kodlar `api/` dizini altında toplanmıştır.
+
+## 2. Teknoloji Yığını (Tech Stack)
+- **Backend Framework**: Node.js, Express.js (v5.x)
+- **Veritabanı**: MongoDB (Mongoose v9.x ODM kullanılarak)
+- **Kimlik Doğrulama & Güvenlik**: Passport.js (JWT Strategy - `passport-jwt`), `bcrypt` (şifre hashleme), `jwt-simple`
+- **Loglama ve İzleme**: `winston` (detaylı loglama), `morgan` (HTTP istek logları), `chalk`
+- **Diğer Araçlar**: `dotenv` (ortam değişkenleri), `cors`, `ejs` (opsiyonel template engine)
+
+## 3. Mimari ve Klasör Yapısı
+Proje klasik bir MVC (Model-View-Controller) / Route-Controller yaklaşımını benimser, ancak görünümler (views) aktif olarak kullanılmaz (API odaklıdır).
+
+- `api/app.js`: Express uygulamasının tanımlandığı, middleware'lerin ve ana rotaların eklendiği merkez dosyadır.
+- `api/config/`: 
+  - `index.js`: Ortam değişkenlerinden gelen ayarların (PORT, DB, JWT vb.) toplandığı yer.
+  - `Enum.js`: HTTP durum kodları ve şifre kuralları gibi sabit değerler.
+  - `role_privileges.js`: Sistemdeki varsayılan yetki grupları (USERS, ROLES, vb.) ve yetkilerin (user_view, role_add) tanımları.
+- `api/db/`:
+  - `database.js`: MongoDB bağlantı konfigürasyonu.
+  - `models/`: Mongoose kullanılarak tanımlanan veritabanı şemaları.
+- `api/lib/`: Sistemin temel yapı taşlarını içerir.
+  - `auth.js`: Passport.js JWT stratejisinin kurulduğu, rol bazlı erişim yetkilerini kontrol eden (`checkRoles`) middleware'i barındırır.
+  - `Error.js` & `Response.js`: Uygulama genelinde tutarlı ve standart bir hata fırlatma / HTTP yanıt formatı (JSON) oluşturur.
+  - `i18n.js`: Çoklu dil desteği sağlayan uluslararasılaştırma modülü.
+  - `logger/`: Winston yapılandırmaları.
+  - `Auditlogs.js`: Sistemde yapılan kritik işlemleri loglayan servis.
+- `api/routes/`: Uç noktaların (endpoints) tanımlandığı yer. `index.js` dosyası dinamik olarak klasördeki tüm rotaları okuyup sisteme dahil eder.
+  - Mevcut rotalar: `auditlogs.js`, `categories.js`, `roles.js`, `users.js`.
+
+## 4. Veritabanı Modelleri (Models) ve İlişkiler
+MongoDB üzerinde aşağıdaki tablolar (koleksiyonlar) yönetilmektedir:
+- **Users**: Sistem kullanıcıları. `email`, `password` (hashlenmiş), `is_active`, `language` gibi alanları tutar. Şifre doğrulama metodları model içinde bulunur.
+- **Roles**: Sistemdeki rolleri temsil eder.
+- **RolePrivileges**: Bir role ait yetkileri (örn: `category_add`, `user_delete`) tutan tablo.
+- **UserRoles**: Hangi kullanıcının hangi rollere sahip olduğunu belirleyen ilişki (mapping) tablosu. Kullanıcı login olduğunda bu tablolar üzerinden yetkileri hesaplanıp JWT içine eklenir.
+- **Categories**: API üzerinden yönetilebilen genel bir kategori tablosu.
+- **AuditLogs**: Kimin, nerede, ne zaman işlem yaptığını (Loglama) kaydetmek amacıyla oluşturulmuş güvenlik ve denetim tablosu.
+
+## 5. Uygulamanın Temel İşleyişi (Core Flows)
+1. **Başlatma**: Uygulama `npm run dev` veya `npm start` ile başlatılır. `dotenv` ile `.env` dosyasındaki ayarlar yüklenir. Mongoose aracılığıyla MongoDB bağlantısı kurulur.
+2. **İstek Yönetimi ve Routing**: İstemciden gelen istekler `api/app.js` üzerinden geçer. `routes/index.js` dinamik olarak tüm route dosyalarını `/api/{route_name}` formatında yönlendirir (Örn: `/api/users`).
+3. **Kimlik Doğrulama (Auth Flow)**: 
+   - Login isteği atıldığında kullanıcı e-posta ve şifre kontrol edilir (`bcrypt.compare`).
+   - Kullanıcının ait olduğu roller ve yetkiler (privileges) veritabanından çekilerek, JWT payload'ına yerleştirilir ve token üretilir.
+   - Korumalı rotalara gelen isteklerde `passport.authenticate('jwt')` kullanılarak token doğrulanır ve yetki gerektiren rotalarda `auth.checkRoles('yetki_anahtari')` middleware'i ile kontrol sağlanır.
+4. **Standart Hata Yönetimi**: Rotalarda oluşan hatalar `next(err)` ile yakalanır, `app.js`'teki hata yönetici bloğuna düşer ve `Response.errorResponse` metodu ile istemciye standart (ve i18n çevirisi yapılmış) bir JSON olarak döner.
+
+## 6. Özet Sonuç
+Bu sistem, yeni modüllerin kolayca eklenebileceği, genişletilebilir bir yapı sunar. JWT ve RBAC entegrasyonu güvenliği sağlarken; Custom Error, i18n, ve dinamik Route yapısı gibi detaylar projenin best-practice (en iyi uygulama) kurallarına uygun olarak inşa edildiğini gösterir. DevOps senaryoları için API'nin hızlıca konteynerize (Docker) edilip, CI/CD süreçlerine entegre edilmeye hazır bir altyapısı vardır.
+
+## 7. Kullanılan Paketler ve Versiyonları (Dependencies)
+Projede kullanılan tüm npm paketleri ve versiyonları aşağıdaki gibidir:
+
+**Ana Bağımlılıklar (Dependencies):**
+- `bcrypt`: ^6.0.0 *(Şifreleme)*
+- `chalk`: ^5.6.2 *(Terminal renklendirme)*
+- `cookie-parser`: ^1.4.7 *(Cookie yönetimi)*
+- `cors`: ^2.8.6 *(Cross-Origin istek izinleri)*
+- `debug`: ^4.4.3 *(Hata ayıklama)*
+- `dotenv`: ^17.4.2 *(Ortam değişkenleri yönetimi)*
+- `ejs`: ^5.0.2 *(Template engine)*
+- `express`: ^5.2.1 *(Web çatısı)*
+- `http-errors`: ^2.0.1 *(HTTP hata nesneleri)*
+- `jwt-simple`: ^0.5.6 *(JWT oluşturma/çözme)*
+- `moment`: ^2.30.1 *(Tarih ve zaman yönetimi)*
+- `mongoose`: ^9.6.2 *(MongoDB ODM)*
+- `morgan`: ^1.10.1 *(HTTP istek loglama)*
+- `nodemon`: ^3.1.14 *(Geliştirme sunucusu otomasyonu)*
+- `passport`: ^0.7.0 *(Kimlik doğrulama middleware)*
+- `passport-jwt`: ^4.0.1 *(Passport JWT stratejisi)*
+- `slugify`: ^1.6.9 *(Metinleri URL dostu formata çevirme)*
+- `winston`: ^3.19.0 *(Detaylı sistem loglaması)*
+
+**Geliştirme Bağımlılıkları (DevDependencies):**
+- `@eslint/js`: ^10.0.1
+- `eslint`: ^10.3.0
+- `globals`: ^17.6.0
+
+## 8. Mevcut Rotalar (API Routes)
+Sistemde aktif olarak çalışan ve dinamik yüklenen tüm rotalar ile bu rotalara erişim için gereken izinler şunlardır:
+
+**Users (`/api/users`)**
+- `POST /register` *(Genel erişim)*
+- `POST /auth` *(Giriş ve Token alma)*
+- `GET /` *(Yetki: `user_view`)*
+- `POST /add` *(Yetki: `user_add`)*
+- `POST /update` *(Yetki: `user_update`)*
+- `POST /delete` *(Yetki: `user_delete`)*
+
+**Roles (`/api/roles`)**
+- `GET /` *(Yetki: `role_view`)*
+- `POST /add` *(Yetki: `role_add`)*
+- `POST /update` *(Yetki: `role_update`)*
+- `POST /delete` *(Yetki: `role_delete`)*
+- `GET /role-privileges` *(Yetki: `role_view`)*
+
+**Categories (`/api/categories`)**
+- `GET /` *(Yetki: `category_view`)*
+- `POST /add` *(Yetki: `category_add`)*
+- `POST /update` *(Yetki: `category_update`)*
+- `POST /delete` *(Yetki: `category_delete`)*
+
+**AuditLogs (`/api/auditlogs`)**
+- `POST /` *(Yetki: `auditlogs_view`)*

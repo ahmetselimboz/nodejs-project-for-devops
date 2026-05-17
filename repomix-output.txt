@@ -1,0 +1,1957 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+bin/
+  www
+config/
+  Enum.js
+  index.js
+  role_privileges.js
+db/
+  models/
+    AuditLogs.js
+    Categories.js
+    RolePrivileges.js
+    Roles.js
+    UserRoles.js
+    Users.js
+  database.js
+i18n/
+  en.js
+  index.js
+  tr.js
+lib/
+  logger/
+    logger.js
+    loggerSettings.js
+  Auditlogs.js
+  auth.js
+  Error.js
+  i18n.js
+  Response.js
+public/
+  stylesheets/
+    style.css
+routes/
+  auditlogs.js
+  categories.js
+  index.js
+  roles.js
+  users.js
+views/
+  error.ejs
+  index.ejs
+.env.example
+.gitignore
+app.js
+eslint.config.mjs
+package.json
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="bin/www">
+/**
+ * Module dependencies.
+ */
+
+var app = require('../app');
+var debug = require('debug')('api:server');
+var http = require('http');
+const Database = require('../db/database');
+const { PORT, CONNECTION_STRING } = require('../config');
+/**
+ * Get port from environment and store in Express.
+ */
+
+var port = normalizePort(PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+var server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  var port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  var bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+function onListening() {
+  var addr = server.address();
+  var bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+  console.log("Listening on port " + addr.port);
+  new Database().connect({ CONNECTION_STRING });
+}
+</file>
+
+<file path="config/Enum.js">
+module.exports = {
+    HTTP_CODES: {
+        OK: 200,
+        CREATED: 201,
+        NO_CONTENT: 204,
+        NOT_MODIFIED: 304,
+        BAD_REQUEST: 400,
+        UNAUTHORIZED: 401,
+        FORBIDDEN: 403,
+        NOT_FOUND: 404,
+        METHOD_NOT_ALLOWED: 405,
+        NOT_ACCEPTABLE: 406,
+        TIMED_OUT: 408,
+        CONFLICT: 409,
+        GONE: 410,
+        UNSUPPORTED_MEDIA_TYPE: 415,
+        UNPROCESSIBLE_ENTITY: 422,
+        TOO_MANY_REQUESTS: 429,
+        INT_SERVER_ERROR: 500,
+        BAD_GATEWAY: 502
+    },
+    PASSWORD_RULES: {
+        MIN_LENGTH: 8,
+        MAX_LENGTH: 16,
+        MIN_UPPERCASE: 1,
+        MIN_LOWERCASE: 1,
+        MIN_DIGITS: 1,
+        MIN_SPECIAL_CHARS: 1
+    },
+    SALT_ROUNDS: 10,
+    SUPER_ADMIN:"SUPER_ADMIN",
+    LOG_LEVELS: {
+        "INFO": "INFO",
+        "WARN": "WARN",
+        "ERROR": "ERROR",
+        "DEBUG": "DEBUG",
+        "VERBOSE": "VERBOSE",
+        "HTTP": "HTTP"
+    }
+}
+</file>
+
+<file path="config/index.js">
+module.exports = {
+  PORT: process.env.PORT || 3000,
+  DB: {
+    HOST: process.env.DB_HOST || '127.0.0.1',
+    PORT: process.env.DB_PORT || 27017,
+    NAME: process.env.DB_NAME || 'test',
+  },
+  CONNECTION_STRING: `mongodb://${process.env.DB_HOST || '127.0.0.1'}:${process.env.DB_PORT || 27017}/${process.env.DB_NAME || 'test'}`,
+  LOG_LEVEL: process.env.LOG_LEVEL || 'debug',
+  JWT: {
+    SECRET: process.env.JWT_SECRET || 'secret',
+    EXPIRE_TIME: !isNaN(parseInt(process.env.JWT_EXPIRE_TIME)) ? parseInt(process.env.JWT_EXPIRE_TIME) : 60*60*24,
+  },
+  DEFAULT_LANGUAGE: process.env.DEFAULT_LANGUAGE || 'EN',
+
+};
+</file>
+
+<file path="config/role_privileges.js">
+module.exports = {
+    privGroups: [
+        {
+            id: "USERS",
+            name: "User Permissions"
+        },
+        {
+            id: "ROLES",
+            name: "Role Permissions"
+        },
+        {
+            id: "CATEGORIES",
+            name: "Category Permissions"
+        },
+        {
+            id: "AUDITLOGS",
+            name: "AuditLogs Permissions"
+        }
+    ],
+
+    privileges: [
+        {
+            key: "user_view",
+            name: "User View",
+            group: "USERS",
+            description: "User view"
+        },
+        {
+            key: "user_add",
+            name: "User Add",
+            group: "USERS",
+            description: "User add"
+        },
+        {
+            key: "user_update",
+            name: "User Update",
+            group: "USERS",
+            description: "User update"
+        },
+        {
+            key: "user_delete",
+            name: "User Delete",
+            group: "USERS",
+            description: "User delete"
+        },
+        {
+            key: "role_view",
+            name: "Role View",
+            group: "ROLES",
+            description: "Role view"
+        },
+        {
+            key: "role_add",
+            name: "Role Add",
+            group: "ROLES",
+            description: "Role add"
+        },
+        {
+            key: "role_update",
+            name: "Role Update",
+            group: "ROLES",
+            description: "Role update"
+        },
+        {
+            key: "role_delete",
+            name: "Role Delete",
+            group: "ROLES",
+            description: "Role delete"
+        },
+        {
+            key: "category_view",
+            name: "Category View",
+            group: "CATEGORIES",
+            description: "Category view"
+        },
+        {
+            key: "category_add",
+            name: "Category Add",
+            group: "CATEGORIES",
+            description: "Category add"
+        },
+        {
+            key: "category_update",
+            name: "Category Update",
+            group: "CATEGORIES",
+            description: "Category update"
+        },
+        {
+            key: "category_delete",
+            name: "Category Delete",
+            group: "CATEGORIES",
+            description: "Category delete"
+        },
+        {
+            key: "category_export",
+            name: "Category Export",
+            group: "CATEGORIES",
+            description: "Category Export"
+        },
+        {
+            key: "auditlogs_view",
+            name: "AuditLogs View",
+            group: "AUDITLOGS",
+            description: "AuditLogs View"
+        }
+    ]
+}
+</file>
+
+<file path="db/models/AuditLogs.js">
+const mongoose = require("mongoose");
+
+const schema = mongoose.Schema({
+    level: String,
+    email: String,
+    location: String,
+    proc_type: String,
+    log: mongoose.SchemaTypes.Mixed
+},{
+    versionKey: false,
+    timestamps: {
+        createdAt: "created_at",
+        updatedAt: "updated_at"
+    }
+});
+
+class AuditLogs extends mongoose.Model {
+
+}
+
+schema.loadClass(AuditLogs);
+module.exports = mongoose.model("audit_logs", schema);
+</file>
+
+<file path="db/models/Categories.js">
+const mongoose = require("mongoose");
+
+const schema = mongoose.Schema({
+    name: {type: String, required: true, unique: true},
+    is_active: { type: Boolean, default: true },
+    created_by: { type: mongoose.SchemaTypes.ObjectId }
+}, {
+    versionKey: false,
+    timestamps: {
+        createdAt: "created_at",
+        updatedAt: "updated_at"
+    }
+});
+
+class Categories extends mongoose.Model {
+
+}
+
+schema.loadClass(Categories);
+module.exports = mongoose.model("categories", schema);
+</file>
+
+<file path="db/models/RolePrivileges.js">
+const mongoose = require("mongoose");
+
+const schema = mongoose.Schema({
+    role_id: { type: mongoose.SchemaTypes.ObjectId, required: true },
+    permission: { type: String, required: true },
+    created_by: { type: mongoose.SchemaTypes.ObjectId }
+}, {
+    versionKey: false,
+    timestamps: {
+        createdAt: "created_at",
+        updatedAt: "updated_at"
+    }
+});
+
+class RolePrivileges extends mongoose.Model {
+
+}
+
+schema.loadClass(RolePrivileges);
+module.exports = mongoose.model("role_privileges", schema);
+</file>
+
+<file path="db/models/Roles.js">
+var RolePrivileges = require('./RolePrivileges');
+
+const mongoose = require('mongoose');
+
+const schema = mongoose.Schema({
+    role_name: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    is_active: {
+        type: Boolean,
+        default: true,
+    },
+    created_by: {
+        type: mongoose.Schema.Types.ObjectId,
+
+    }
+}, {
+    timestamps: {
+        createdAt: 'created_at',
+        updatedAt: 'updated_at'
+    }, versionKey: false
+});
+
+
+class Roles extends mongoose.Model {
+
+    static async findByIdAndDelete(_id) {
+
+        await RolePrivileges.deleteMany({ role_id: _id });
+
+        return await super.findByIdAndDelete(_id);
+    }
+}
+
+schema.loadClass(Roles);
+
+module.exports = mongoose.model('Roles', schema);
+</file>
+
+<file path="db/models/UserRoles.js">
+const mongoose = require("mongoose");
+const Roles = require("./Roles");
+const Users = require("./Users");
+
+const schema = mongoose.Schema({
+    role_id: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: Roles },
+    user_id: { type: mongoose.SchemaTypes.ObjectId, required: true, ref: Users }
+}, {
+    versionKey: false,
+    timestamps: {
+        createdAt: "created_at",
+        updatedAt: "updated_at"
+    }
+});
+
+class UserRoles extends mongoose.Model {
+
+}
+
+schema.loadClass(UserRoles);
+module.exports = mongoose.model("user_roles", schema);
+</file>
+
+<file path="db/models/Users.js">
+const mongoose = require('mongoose');
+const { PASSWORD_RULES, HTTP_CODES } = require('../../config/Enum');
+const config = require('../../config');
+const CustomError = require('../../lib/Error');
+const I18n = require('../../lib/i18n');
+
+const i18n = new I18n();
+const bcrypt = require('bcrypt');
+
+const schema = mongoose.Schema({
+    first_name: String,
+    last_name: String,
+    phone_number: String,
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    password: {
+        type: String,
+        required: true,
+    },
+    is_active: {
+        type: Boolean,
+        default: true,
+    },
+    language: {
+        type: String,
+        default: config.DEFAULT_LANGUAGE,
+    }
+}, { timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+}, versionKey: false });
+
+
+class Users extends mongoose.Model {
+
+    validPassword(password) {
+        return bcrypt.compareSync(password, this.password);
+    }
+
+    static validateFieldsBeforeAuth(email, password, lang) {
+        let message = i18n.translate('COMMON.VALIDATION_ERROR', lang);
+        let description = i18n.translate('USERS.EMAIL_OR_PASSWORD_INVALID', lang);
+
+        if(typeof password !== 'string' || password.length < PASSWORD_RULES.MIN_LENGTH ) {
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
+        }
+        if(typeof email !== 'string' || !email.includes('@') || !email.includes('.')) {
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
+        }
+        if(email.length > 255) {
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
+        }
+        if(password.length > 255) {
+            throw new CustomError(HTTP_CODES.UNAUTHORIZED, message, description);
+        }
+        return null;
+    }
+}
+
+schema.loadClass(Users);
+
+module.exports = mongoose.model('Users', schema);
+</file>
+
+<file path="db/database.js">
+const mongoose = require('mongoose');
+
+let instance = null;
+class Database {
+    constructor() {
+        if (!instance) {
+            this.mongoConnetion = null;
+            instance = this;
+        }
+        return instance;
+    }
+
+    async connect(options) {
+        try {
+            console.log('Connecting to MongoDB...');
+            let db = await mongoose.connect(options.CONNECTION_STRING);
+            this.mongoConnetion = db;
+            console.log('Connected to MongoDB!');
+        } catch (error) {
+            console.error(error);
+            process.exit(1);
+        }
+    }
+}
+
+module.exports = Database;
+</file>
+
+<file path="i18n/en.js">
+module.exports = {
+    "SYSTEM": {
+        "ERROR": "System Error",
+        "ERROR_DESCRIPTION": "An error occurred while processing your request. Please try again later."
+    },
+    "COMMON": {
+        "VALIDATION_ERROR": "Validation Error",
+        "VALIDATION_ERROR_DESCRIPTION": "The request you made is invalid. Please check your request and try again.",
+        "NOT_FOUND": "Not Found",
+        "NOT_FOUND_DESCRIPTION": "The resource you are looking for does not exist.",
+        "UNAUTHORIZED": "Unauthorized",
+        "UNAUTHORIZED_DESCRIPTION": "You are not authorized to access this resource.",
+        "FORBIDDEN": "Forbidden",
+        "FORBIDDEN_DESCRIPTION": "You are not allowed to access this resource.",
+        "INTERNAL_SERVER_ERROR": "Internal Server Error",
+        "ALREADY_EXISTS": "Already exists!",
+        "ALREADY_EXISTS_DESCRIPTION": "The record you are trying to create already exists.",
+        "ID_REQUIRED": "_id is required",
+        "FIELD_REQUIRED": "{0} is required",
+    },
+    "USERS": {
+        "USER_NOT_FOUND": "User not found",
+        "USER_NOT_FOUND_DESCRIPTION": "The user you are looking for does not exist.",
+        "EMAIL_REQUIRED": "Email is required",
+        "FIRST_NAME_REQUIRED": "First name is required",
+        "LAST_NAME_REQUIRED": "Last name is required",
+        "PHONE_NUMBER_REQUIRED": "Phone number is required",
+        "PASSWORD_REQUIRED": "Password is required",
+        "PASSWORD_MIN_LENGTH": "Password must be at least {0} characters long",
+        "ROLES_REQUIRED": "Roles are required",
+        "ROLES_NOT_FOUND": "One or more roles not found",
+        "EMAIL_OR_PASSWORD_INVALID": "Email or password is invalid",
+        "CREATE_SUCCESS": "User created successfully",
+        "UPDATE_SUCCESS": "User updated successfully",
+        "DELETE_SUCCESS": "User deleted successfully"
+    },
+    "CATEGORIES": {
+        "NAME_REQUIRED": "Name is required",
+        "NOT_FOUND": "Category not found",
+        "CREATE_SUCCESS": "Category created successfully",
+        "UPDATE_SUCCESS": "Category updated successfully",
+        "DELETE_SUCCESS": "Category deleted successfully"
+    },
+    "ROLES": {
+        "ROLE_NAME_REQUIRED": "Role name is required",
+        "PERMISSIONS_REQUIRED": "Permissions are required",
+        "NOT_FOUND": "Role not found",
+        "CREATE_SUCCESS": "Role created successfully",
+        "UPDATE_SUCCESS": "Role updated successfully",
+        "DELETE_SUCCESS": "Role deleted successfully"
+    }
+}
+</file>
+
+<file path="i18n/index.js">
+module.exports = {
+    "EN": require("./en.js"),
+    "TR": require("./tr.js"),
+}
+</file>
+
+<file path="i18n/tr.js">
+module.exports = {
+    "SYSTEM": {
+        "ERROR": "Sistem Hatası",
+        "ERROR_DESCRIPTION": "İsteğiniz işlenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin."
+    },
+    "COMMON": {
+        "VALIDATION_ERROR": "Doğrulama Hatası",
+        "VALIDATION_ERROR_DESCRIPTION": "Yaptığınız istek geçersiz. Lütfen isteğinizi kontrol edip tekrar deneyin.",
+        "NOT_FOUND": "Bulunamadı",
+        "NOT_FOUND_DESCRIPTION": "Aradığınız kaynak mevcut değil.",
+        "UNAUTHORIZED": "Yetkisiz",
+        "UNAUTHORIZED_DESCRIPTION": "Bu kaynağa erişim yetkiniz yok.",
+        "FORBIDDEN": "Erişim Engellendi",
+        "FORBIDDEN_DESCRIPTION": "Bu kaynağa erişmenize izin verilmiyor.",
+        "INTERNAL_SERVER_ERROR": "Sunucu Hatası",
+        "ALREADY_EXISTS": "Zaten mevcut!",
+        "ALREADY_EXISTS_DESCRIPTION": "Oluşturmaya çalıştığınız kayıt zaten mevcut.",
+        "ID_REQUIRED": "_id alanı zorunludur",
+        "FIELD_REQUIRED": "{0} alanı zorunludur",
+    },
+    "USERS": {
+        "USER_NOT_FOUND": "Kullanıcı bulunamadı",
+        "USER_NOT_FOUND_DESCRIPTION": "Aradığınız kullanıcı mevcut değil.",
+        "EMAIL_REQUIRED": "E-posta alanı zorunludur",
+        "FIRST_NAME_REQUIRED": "Ad alanı zorunludur",
+        "LAST_NAME_REQUIRED": "Soyad alanı zorunludur",
+        "PHONE_NUMBER_REQUIRED": "Telefon numarası zorunludur",
+        "PASSWORD_REQUIRED": "Parola alanı zorunludur",
+        "PASSWORD_MIN_LENGTH": "Parola en az {0} karakter uzunluğunda olmalıdır",
+        "ROLES_REQUIRED": "Roller zorunludur",
+        "ROLES_NOT_FOUND": "Bir veya daha fazla rol bulunamadı",
+        "EMAIL_OR_PASSWORD_INVALID": "E-posta veya parola geçersiz",
+        "CREATE_SUCCESS": "Kullanıcı başarıyla oluşturuldu",
+        "UPDATE_SUCCESS": "Kullanıcı başarıyla güncellendi",
+        "DELETE_SUCCESS": "Kullanıcı başarıyla silindi"
+    },
+    "CATEGORIES": {
+        "NAME_REQUIRED": "İsim alanı zorunludur",
+        "NOT_FOUND": "Kategori bulunamadı",
+        "CREATE_SUCCESS": "Kategori başarıyla oluşturuldu",
+        "UPDATE_SUCCESS": "Kategori başarıyla güncellendi",
+        "DELETE_SUCCESS": "Kategori başarıyla silindi"
+    },
+    "ROLES": {
+        "ROLE_NAME_REQUIRED": "Rol adı zorunludur",
+        "PERMISSIONS_REQUIRED": "İzinler zorunludur",
+        "NOT_FOUND": "Rol bulunamadı",
+        "CREATE_SUCCESS": "Rol başarıyla oluşturuldu",
+        "UPDATE_SUCCESS": "Rol başarıyla güncellendi",
+        "DELETE_SUCCESS": "Rol başarıyla silindi"
+    }
+}
+</file>
+
+<file path="lib/logger/logger.js">
+const logger = require("./loggerSettings");
+
+let instance = null;
+class LoggerClass {
+  constructor() {
+    if (!instance) {
+      instance = this;
+    }
+    return instance;
+  }
+
+  #createLogObject(email, location, proc_type, log) {
+    return {
+      email,
+      location,
+      proc_type,
+      log,
+    };
+  }
+
+  info(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+    logger.info(logs);
+  }
+
+  warn(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+    logger.warn(logs);
+  }
+
+  error(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+
+    logger.error(logs);
+  }
+
+  verbose(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+    logger.verbose(logs);
+  }
+
+  silly(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+    logger.silly(logs);
+  }
+
+  http(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+    logger.http(logs);
+  }
+
+  debug(email, location, proc_type, log) {
+    let logs = this.#createLogObject(email, location, proc_type, log);
+    logger.debug(logs);
+  }
+}
+
+
+module.exports= new LoggerClass();
+</file>
+
+<file path="lib/logger/loggerSettings.js">
+var winston = require("winston");
+const { LOG_LEVEL } = require("../../config/index");
+const path = require('path');
+
+const colorizer = winston.format.colorize();
+
+const buildLine = (info) =>
+  `${info.timestamp} ${info.level.toUpperCase()}: [email:${info.message.email}] [location:${info.message.location}] [procType:${info.message.proc_type}] [log:${JSON.stringify(info.message.log)}]`;
+
+const fileFormat = winston.format.combine(
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
+  winston.format.simple(),
+  winston.format.splat(),
+  winston.format.printf(buildLine)
+);
+
+const consoleFormat = winston.format.combine(
+  winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),
+  winston.format.splat(),
+  winston.format.printf((info) => colorizer.colorize(info.level, buildLine(info)))
+);
+
+const logger = winston.createLogger({
+  level: LOG_LEVEL,
+  transports: [
+    new winston.transports.File({ filename: path.join(__dirname, "../../logs/info.log"), format: fileFormat }),
+    new winston.transports.Console({ format: consoleFormat }),
+  ],
+});
+
+module.exports = logger;
+</file>
+
+<file path="lib/Auditlogs.js">
+const { LOG_LEVELS } = require('../config/Enum');
+const AuditLogs = require('../db/models/AuditLogs');
+
+let instance = null;
+
+class Auditlogs {
+    constructor() {
+        if (instance) {
+            return instance;
+        }
+        instance = this;
+    }
+
+    info(email, location, proc_type, log) {
+        this.#saveToDB({level: LOG_LEVELS.INFO, email, location, proc_type, log});
+    }
+
+    warn(email, location, proc_type, log) {
+        this.#saveToDB({level: LOG_LEVELS.WARN, email, location, proc_type, log});
+    }
+
+    error(email, location, proc_type, log) {
+        this.#saveToDB({level: LOG_LEVELS.ERROR, email, location, proc_type, log});
+    }
+
+    debug(email, location, proc_type, log) {
+        this.#saveToDB({level: LOG_LEVELS.DEBUG, email, location, proc_type, log});
+    }
+
+    verbose(email, location, proc_type, log) {
+        this.#saveToDB({level: LOG_LEVELS.VERBOSE, email, location, proc_type, log});
+    }
+
+    http(email, location, proc_type, log) {
+        this.#saveToDB({level: LOG_LEVELS.HTTP, email, location, proc_type, log});
+    }
+
+    #saveToDB({level, email, location, proc_type, log}) {
+       AuditLogs.create({level, email, location, proc_type, log});
+
+    }
+}
+
+module.exports = new Auditlogs();
+</file>
+
+<file path="lib/auth.js">
+const passport = require("passport");
+const { ExtractJwt, Strategy } = require("passport-jwt");
+const Users = require("../db/models/Users");
+const UserRoles = require("../db/models/UserRoles");
+const RolePrivileges = require("../db/models/RolePrivileges");
+const Response = require("./Response");
+const { HTTP_CODES } = require("../config/Enum");
+
+const config = require("../config");
+
+const privs = require("../config/role_privileges");
+const CustomError = require("./Error");
+
+module.exports = function () {
+    let strategy = new Strategy({
+        secretOrKey: config.JWT.SECRET,
+        jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken()
+    }, async (payload, done) => {
+        try {
+
+            let user = await Users.findOne({ _id: payload.id });
+
+            if (user) {
+
+                let userRoles = await UserRoles.find({ user_id: payload.id });
+
+                let rolePrivileges = await RolePrivileges.find({ role_id: { $in: userRoles.map(ur => ur.role_id) } });
+
+                let privileges = rolePrivileges.map(rp => privs.privileges.find(x => x.key == rp.permission))
+
+                done(null, {
+                    id: user._id,
+                    roles: privileges,
+                    email: user.email,
+                    first_name: user.first_name,
+                    last_name: user.last_name,
+                    language: user.language,
+                    exp: parseInt(Date.now() / 1000) + config.JWT.EXPIRE_TIME
+                });
+
+            } else {
+                done(new Error("User not found"), null);
+            }
+
+        } catch (err) {
+            done(err, null);
+        }
+
+    });
+
+    passport.use(strategy);
+
+    return {
+        initialize: function () {
+            return passport.initialize();
+        },
+        authenticate: function () {
+            return passport.authenticate("jwt", { session: false })
+        },
+        checkRoles: (...expectedRoles) => {
+            return (req, res, next) => {
+                // expectedRoles is an array of roles like ['user_add', 'user_update', 'user_delete']
+                // req.user.roles is an array of roles like [{key: 'user_view', name: 'User View', group: 'USERS'}, {key: 'auditlogs_view', name: 'AuditLogs View', group: 'AUDITLOGS'}]
+                let i = 0;
+                let privileges = req.user.roles.filter(x => x).map(x => x.key); // ['user_view', 'auditlogs_view']
+
+                while (i < expectedRoles.length && !privileges.includes(expectedRoles[i])) i++; 
+
+                // if (i >= expectedRoles.length) {
+                //     let response = Response.errorResponse(new CustomError(HTTP_CODES.UNAUTHORIZED, "Need Permission", "Need Permission"));
+                //     return res.status(response.code).json(response);
+                // }
+
+                return next(); // Authorized
+
+            }
+        }
+    }
+}
+</file>
+
+<file path="lib/Error.js">
+class CustomError extends Error {
+    constructor(code, message, description) {
+        super(`"code":"${code}", "message":"${message}", "description":"${description}"`);
+        this.code = code;
+        this.message = message;
+        this.description = description;
+    }
+}
+module.exports = CustomError;
+</file>
+
+<file path="lib/i18n.js">
+const i18n = require('../i18n');
+const config = require('../config');
+
+
+class I18n {
+    constructor(lang) {
+        // System language defaults to config.DEFAULT_LANGUAGE
+        this.lang = lang || config.DEFAULT_LANGUAGE;
+    }
+
+    translate(text, lang = this.lang, params = []) {
+        // Fall back to the system default language when lang is missing/unknown
+        if (!lang || !i18n[lang]) lang = config.DEFAULT_LANGUAGE;
+
+        let array = text.split('.');
+        let value = i18n[lang]?.[array[0]];
+
+        for (let i = 1; i < array.length; i++) {
+            value = value?.[array[i]];
+        }
+
+        value = value + "";
+
+        for (let i = 0; i < params.length; i++) {
+            value = value.replace(`{0}`, params[i]);
+        }
+        // If the key cannot be resolved, return the key itself
+        return value ?? text;
+    }
+}
+
+module.exports = I18n;
+</file>
+
+<file path="lib/Response.js">
+const path = require('path');
+const { HTTP_CODES } = require('../config/Enum');
+const CustomError = require('./Error');
+const LoggerClass = require('./logger/logger');
+const I18n = require('./i18n');
+
+const i18n = new I18n();
+
+const PROJECT_ROOT = path.resolve(__dirname, '..');
+
+
+
+class Response {
+    constructor() {}
+
+    static #getErrorLocation(error) {
+        if (!error?.stack) return 'unknown';
+        const lines = error.stack.split('\n');
+        for (let i = 1; i < lines.length; i++) {
+            const match = lines[i].match(/\(?([^()\s]+):(\d+):(\d+)\)?$/);
+            if (!match) continue;
+            const [, file, line] = match;
+            if (file.startsWith('node:')) continue;
+            const rel = file.startsWith(PROJECT_ROOT) ? path.relative(PROJECT_ROOT, file) : file;
+            return `${rel}:${line}`;
+        }
+        return 'unknown';
+    }
+
+
+    static successResponse(code, data){
+        return {
+            code: code || HTTP_CODES.OK,
+            success: true,
+            data
+        }
+    }
+
+    static errorResponse(code, error, lang){
+
+        
+
+        if(error instanceof CustomError){
+            return {
+                code: error.code || HTTP_CODES.INT_SERVER_ERROR,
+                success: false,
+                error:{
+                    message: error.message,
+                    description: error.description
+                }
+            }
+        }else if(error.message?.includes('E11000')){
+            return {
+                code: HTTP_CODES.CONFLICT,
+                success: false,
+                error:{
+                    message: i18n.translate('COMMON.ALREADY_EXISTS', lang),
+                    description: i18n.translate('COMMON.ALREADY_EXISTS_DESCRIPTION', lang)
+                }
+            }
+        }
+        LoggerClass.error("System", this.#getErrorLocation(error), 'system_error', error.message);
+        return {
+            code: HTTP_CODES.INT_SERVER_ERROR,
+            success: false,
+            error:{
+                message: i18n.translate('COMMON.INTERNAL_SERVER_ERROR', lang),
+                description: error.message
+            }
+        }
+    }
+}
+
+module.exports = Response;
+</file>
+
+<file path="public/stylesheets/style.css">
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+</file>
+
+<file path="routes/auditlogs.js">
+var express = require('express');
+const AuditLogs = require('../db/models/AuditLogs');
+const Response = require('../lib/Response');
+const { HTTP_CODES } = require('../config/Enum');
+const moment = require('moment');
+
+
+var router = express.Router();
+const auth = require('../lib/auth')();
+
+
+router.use(auth.authenticate());
+
+/* GET users listing. */
+router.post('/', auth.checkRoles('auditlogs_view'), async (req, res) => {
+  try {
+    let body = req.body;
+    let query = {};
+    let skip = body.skip || 0;
+    let limit = body.limit || 500;
+    let sort = body.sort || { created_at: -1 };
+    let select = body.select || '';
+    let populate = body.populate || '';
+
+
+    if (typeof body.skip !== 'number') {
+      skip = 0;
+    }
+
+    if (typeof body.limit !== 'number' && body.limit > 500) {
+      limit = 500;
+    }
+
+    if (typeof body.sort !== 'object') {
+      sort = { created_at: -1 };
+    }
+
+    if (body.begin_date && body.end_date) {
+      query.created_at = { $gte: moment(body.begin_date).toDate(), $lte: moment(body.end_date).toDate() };
+    } else {
+      query.created_at = { $gte: moment().subtract(1, 'day').toDate(), $lte: moment().toDate() };
+    }
+
+    let count = await AuditLogs.countDocuments(query);
+    let auditLogs = await AuditLogs.find(query).skip(skip).limit(limit).sort(sort).select(select).populate(populate);
+
+    res.json(Response.successResponse(HTTP_CODES.OK, auditLogs, count));
+
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+module.exports = router;
+</file>
+
+<file path="routes/categories.js">
+const express = require('express');
+const router = express.Router();
+const Categories = require('../db/models/Categories');
+const Response = require('../lib/Response');
+const { HTTP_CODES } = require('../config/Enum');
+const CustomError = require('../lib/Error');
+const Auditlogs = require('../lib/Auditlogs');
+const LoggerClass = require('../lib/logger/logger');
+const auth = require('../lib/auth')();
+const I18n = require('../lib/i18n');
+
+const i18n = new I18n();
+
+router.use(auth.authenticate());
+
+router.get('/', auth.checkRoles('category_view'), async (req, res) => {
+
+    try {
+        const categories = await Categories.find();
+        res.json(Response.successResponse(HTTP_CODES.OK, categories));
+    } catch (error) {
+        let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+        res.status(errorResponse.code).json(errorResponse);
+    }
+
+});
+
+router.post('/add', auth.checkRoles('category_add'), async (req, res) => {
+    let body = req.body;
+    try {
+        let lang = req.user?.language;
+        if (!body.name) {
+            throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('CATEGORIES.NAME_REQUIRED', lang));
+        }
+
+        let category = new Categories({
+            name: body.name,
+            created_by: req.user?.id
+        });
+        await category.save();
+        Auditlogs.info(req.user?.email, 'Categories', 'add', category.toObject());
+        LoggerClass.info(req.user?.email, 'Categories', 'add', category.toObject());
+
+        res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('CATEGORIES.CREATE_SUCCESS', req.user?.language)));
+
+    } catch (error) {
+
+        let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+
+        res.status(errorResponse.code).json(errorResponse);
+    }
+});
+
+
+router.post('/update', auth.checkRoles('category_update'), async (req, res) => {
+
+    let body = req.body;
+
+    try {
+
+        let lang = req.user?.language;
+
+        if (!body._id) {
+            throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
+        }
+
+        let updates = {};
+
+        if (!body.name) {
+            throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('CATEGORIES.NAME_REQUIRED', lang));
+        }
+
+        if (body.name) updates.name = body.name;
+        if (typeof body.is_active === 'boolean') updates.is_active = body.is_active;
+
+        let category = await Categories.findByIdAndUpdate(body._id, updates, { new: true });
+
+        if (!category) {
+            throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('CATEGORIES.NOT_FOUND', lang));
+        }
+
+        Auditlogs.info(req.user?.email, 'Categories', 'update', {_id:body._id, ...updates});
+        LoggerClass.info(req.user?.email, 'Categories', 'update', {_id:body._id, ...updates});
+
+        res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('CATEGORIES.UPDATE_SUCCESS', lang)));
+    } catch (error) {
+        let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+        res.status(errorResponse.code).json(errorResponse);
+    }
+});
+
+router.post('/delete', auth.checkRoles('category_delete'), async (req, res) => {
+    let body = req.body;
+    try {
+        let lang = req.user?.language;
+        if (!body._id) {
+            throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
+        }
+        let category = await Categories.findByIdAndDelete(body._id);
+        if (!category) {
+            throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('CATEGORIES.NOT_FOUND', lang));
+        }
+        Auditlogs.info(req.user?.email, 'Categories', 'delete', {_id:body._id});
+        LoggerClass.info(req.user?.email, 'Categories', 'delete', {_id:body._id});
+        res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('CATEGORIES.DELETE_SUCCESS', lang)));
+    } catch (error) {
+        let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+        res.status(errorResponse.code).json(errorResponse);
+    }
+});
+
+module.exports = router;
+</file>
+
+<file path="routes/index.js">
+var express = require('express');
+var fs = require('fs');
+
+var router = express.Router();
+let routes = fs.readdirSync(__dirname);
+
+routes.forEach(route => {
+  if (route.includes(".js") && route !== "index.js") {
+    router.use(`/${route.replace(".js", "")}`, require(`./${route}`));
+  }
+});
+
+module.exports = router;
+</file>
+
+<file path="routes/roles.js">
+var express = require('express');
+var router = express.Router();
+
+var Roles = require('../db/models/Roles');
+var RolePrivileges = require('../db/models/RolePrivileges');
+
+const Response = require('../lib/Response');
+const { HTTP_CODES } = require('../config/Enum');
+const CustomError = require('../lib/Error');
+const rolePrivileges = require('../config/role_privileges');
+const auth = require('../lib/auth')();
+const I18n = require('../lib/i18n');
+const Auditlogs = require('../lib/Auditlogs');
+const LoggerClass = require('../lib/logger/logger');
+
+const i18n = new I18n();
+
+router.use(auth.authenticate());
+
+/* GET users listing. */
+router.get('/', auth.checkRoles('role_view'), async (req, res) => {
+  try {
+    const roles = await Roles.find();
+    let rolePrivileges = await RolePrivileges.find({ });
+    let roleData = roles.map(role => {
+      return {
+        _id: role._id,
+        role_name: role.role_name,
+        permissions: rolePrivileges.filter(rp => rp.role_id.toString() === role._id.toString()).map(rp => rp.permission)
+      };
+    });
+
+
+
+    res.json(Response.successResponse(HTTP_CODES.OK, roleData));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+
+router.post('/add', auth.checkRoles('role_add'), async (req, res) => {
+  let body = req.body;
+  try {
+    let lang = req.user?.language;
+    if (!body.role_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('ROLES.ROLE_NAME_REQUIRED', lang));
+    }
+    if (!body.permissions || !Array.isArray(body.permissions) || body.permissions.length === 0) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('ROLES.PERMISSIONS_REQUIRED', lang));
+    }
+
+    let role = new Roles({
+      role_name: body.role_name,
+      created_by: req.user?.id
+    });
+    await role.save();
+
+
+    for (let permission of body.permissions) {
+      let rolePrivileges = new RolePrivileges({
+        role_id: role._id,
+        permission: permission,
+        created_by: req.user?.id
+      });
+      await rolePrivileges.save();
+    }
+
+    let roleData = {
+      role,
+      rolePrivileges
+    }
+
+    Auditlogs.info(req.user?.email, 'Roles', 'add', roleData);
+    LoggerClass.info(req.user?.email, 'Roles', 'add', roleData);
+
+    res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('ROLES.CREATE_SUCCESS', lang)));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.post('/update', auth.checkRoles('role_update'), async (req, res) => {
+  let body = req.body;
+  try {
+    let lang = req.user?.language;
+    let updates = {};
+    if (!body._id) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
+    }
+    if (!body.role_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('ROLES.ROLE_NAME_REQUIRED', lang));
+    }
+
+    if (body.role_name) updates.role_name = body.role_name;
+    if (typeof body.is_active === 'boolean') updates.is_active = body.is_active;
+
+    if (body.permissions && Array.isArray(body.permissions) && body.permissions.length > 0) {
+
+      let permissions = await RolePrivileges.find({ role_id: body._id });
+
+      let removedPermissions = permissions.filter(permission => !body.permissions.includes(permission.permission));
+      let newPermissions = body.permissions.filter(permission => !permissions.map(p => p.permission).includes(permission));
+
+      if (removedPermissions.length > 0) {
+        await RolePrivileges.deleteMany({ _id: { $in: removedPermissions.map(p => p._id) } });
+      }
+
+      if (newPermissions.length > 0) {
+        for (let permission of newPermissions) {
+          let rolePrivilege = new RolePrivileges({
+            role_id: body._id,
+            permission: permission,
+            created_by: req.user?.id
+          });
+          await rolePrivilege.save();
+        }
+      }
+    }
+
+    let role = await Roles.findByIdAndUpdate(body._id, updates, { new: true });
+
+    Auditlogs.info(req.user?.email, 'Roles', 'update', updates);
+    LoggerClass.info(req.user?.email, 'Roles', 'update', updates);
+
+    if (!role) {
+      throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('ROLES.NOT_FOUND', lang));
+    }
+
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.UPDATE_SUCCESS', lang)));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.post('/delete', auth.checkRoles('role_delete'), async (req, res) => {
+  let body = req.body;
+  try {
+    let lang = req.user?.language;
+    if (!body._id) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
+    }
+
+    await Roles.findByIdAndDelete(body._id);
+
+    Auditlogs.info(req.user?.email, 'Roles', 'delete', {id: body._id});
+    LoggerClass.info(req.user?.email, 'Roles', 'delete', {id: body._id});
+
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.DELETE_SUCCESS', lang)));
+
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.get('/role-privileges', auth.checkRoles('role_view'), async (req, res) => {
+  try {
+
+    res.json(Response.successResponse(HTTP_CODES.OK, rolePrivileges));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+module.exports = router;
+</file>
+
+<file path="routes/users.js">
+var express = require('express');
+const bcrypt = require('bcrypt');
+const jwt = require('jwt-simple');
+const Response = require('../lib/Response');
+const { HTTP_CODES, PASSWORD_RULES, SUPER_ADMIN } = require('../config/Enum');
+const CustomError = require('../lib/Error');
+const Users = require('../db/models/Users');
+const Roles = require('../db/models/Roles');
+const UserRoles = require('../db/models/UserRoles');
+const RolePrivileges = require('../db/models/RolePrivileges');
+const config = require('../config');
+const auth = require('../lib/auth')();
+const I18n = require('../lib/i18n');
+const Auditlogs = require('../lib/Auditlogs');
+const LoggerClass = require('../lib/logger/logger');
+
+const i18n = new I18n();
+
+var router = express.Router();
+
+router.post('/register', async (req, res) => {
+  let body = req.body;
+  try {
+
+    let userExists = await Users.findOne({});
+    if (userExists) {
+      return res.sendStatus(HTTP_CODES.NOT_FOUND);
+    }
+
+
+    let lang = req.user?.language;
+
+    if (!body.email) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.EMAIL_REQUIRED', lang));
+    }
+    if (!body.first_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.FIRST_NAME_REQUIRED', lang));
+    }
+    if (!body.last_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.LAST_NAME_REQUIRED', lang));
+    }
+    if (!body.phone_number) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PHONE_NUMBER_REQUIRED', lang));
+    }
+    if (!body.password) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PASSWORD_REQUIRED', lang));
+    }
+    if (body.password.length < PASSWORD_RULES.MIN_LENGTH) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PASSWORD_MIN_LENGTH', lang).replace('{0}', PASSWORD_RULES.MIN_LENGTH));
+    }
+
+    let hashedPassword = await bcrypt.hashSync(body.password, bcrypt.genSaltSync(PASSWORD_RULES.SALT_ROUNDS), null);
+
+
+
+    let user = new Users({
+      email: body.email,
+      password: hashedPassword,
+      first_name: body.first_name,
+      last_name: body.last_name,
+      phone_number: body.phone_number,
+
+    });
+    await user.save();
+
+    let role = new Roles({
+      role_name: SUPER_ADMIN,
+      is_active: true,
+      created_by: user._id
+    });
+    await role.save();
+
+    let userRole = new UserRoles({
+      user_id: user._id,
+      role_id: role._id,
+      created_by: user._id
+    });
+    await userRole.save();
+
+
+
+    res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language)));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+
+});
+
+router.post('/auth', async (req, res) => {
+
+  try {
+
+    let lang = req.user?.language;
+    let { email, password } = req.body;
+
+    Users.validateFieldsBeforeAuth(email, password, lang);
+
+    let user = await Users.findOne({ email: email });
+
+    if (!user) throw new CustomError(HTTP_CODES.UNAUTHORIZED, i18n.translate('USERS.EMAIL_OR_PASSWORD_INVALID', lang));
+
+    if (!user.validPassword(password)) throw new CustomError(HTTP_CODES.UNAUTHORIZED, i18n.translate('USERS.EMAIL_OR_PASSWORD_INVALID', lang));
+
+    let payload = {
+      id: user._id,
+      exp: parseInt(Date.now() / 1000) + parseInt(config.JWT.EXPIRE_TIME)
+    };
+
+    let token = jwt.encode(payload, config.JWT.SECRET);
+
+    let userData = {
+      _id: user._id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      phone_number: user.phone_number,
+    };
+
+    let userRoles = await UserRoles.find({ user_id: user._id });
+    let roles = await Roles.find({ _id: { $in: userRoles.map(ur => ur.role_id) } });
+    userData.roles = roles.map(r => r.role_name);
+
+    res.json(Response.successResponse(HTTP_CODES.OK, {
+      user: userData,
+      token: token
+    }));
+
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+router.use(auth.authenticate());
+
+/* GET users listing. */
+router.get('/', auth.checkRoles('user_view'), async (req, res) => {
+  try {
+
+    const users = await Users.find();
+
+    const userIds = users.map(u => u._id);
+
+    const userRoles = await UserRoles.find({
+      user_id: { $in: userIds }
+    });
+
+    const roleIds = userRoles.map(ur => ur.role_id);
+
+    const roles = await Roles.find({
+      _id: { $in: roleIds }
+    });
+
+    const allRolePrivileges = await RolePrivileges.find({
+      role_id: { $in: roleIds }
+    });
+
+    const userData = users.map(user => {
+
+      const currentUserRoles = userRoles.filter(
+        ur => ur.user_id.toString() === user._id.toString()
+      );
+
+      const rolesObject = {};
+
+      currentUserRoles.forEach(userRole => {
+
+        const role = roles.find(
+          r => r._id.toString() === userRole.role_id.toString()
+        );
+
+        if (!role) return;
+
+        const permissions = allRolePrivileges
+          .filter(
+            rp => rp.role_id.toString() === role._id.toString()
+          )
+          .map(rp => rp.permission);
+
+        rolesObject[role.role_name] = permissions;
+      });
+
+      return {
+        _id: user._id,
+        email: user.email,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        phone_number: user.phone_number,
+        language: user?.language,
+        roles: rolesObject
+      };
+    });
+
+    res.json(
+      Response.successResponse(HTTP_CODES.OK, userData)
+    );
+
+  } catch (error) {
+
+    const errorResponse = Response.errorResponse(
+      HTTP_CODES.INT_SERVER_ERROR,
+      error,
+      req.user?.language
+    );
+
+    res
+      .status(errorResponse.code)
+      .json(errorResponse);
+  }
+});
+
+router.post('/add', auth.checkRoles('user_add'), async (req, res) => {
+  let body = req.body;
+  try {
+
+    let lang = req.user?.language;
+
+    if (!body.email) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.EMAIL_REQUIRED', lang));
+    }
+    if (!body.first_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.FIRST_NAME_REQUIRED', lang));
+    }
+    if (!body.last_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.LAST_NAME_REQUIRED', lang));
+    }
+    if (!body.phone_number) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PHONE_NUMBER_REQUIRED', lang));
+    }
+    if (!body.password) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PASSWORD_REQUIRED', lang));
+    }
+    if (body.password.length < PASSWORD_RULES.MIN_LENGTH) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PASSWORD_MIN_LENGTH', lang).replace('{0}', PASSWORD_RULES.MIN_LENGTH));
+    }
+
+    if (body.roles && !Array.isArray(body.roles) || body.roles.length === 0) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.ROLES_REQUIRED', lang));
+    }
+
+    let roles = await Roles.find({ _id: { $in: body.roles } });
+
+    if (roles.length !== body.roles.length) {
+      throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('USERS.ROLES_NOT_FOUND', lang));
+    }
+
+
+
+    let hashedPassword = await bcrypt.hashSync(body.password, bcrypt.genSaltSync(PASSWORD_RULES.SALT_ROUNDS), null);
+
+    let user = new Users({
+      email: body.email,
+      password: hashedPassword,
+      first_name: body.first_name,
+      last_name: body.last_name,
+      phone_number: body.phone_number,
+      language: body.language
+
+    });
+
+    await user.save();
+
+    for (let role of roles) {
+      let userRole = new UserRoles({
+        user_id: user._id,
+        role_id: role._id,
+
+      });
+      await userRole.save();
+    }
+
+    Auditlogs.info(req.user?.email, 'Users', 'add', user);
+    LoggerClass.info(req.user?.email, 'Users', 'add', user);
+
+    res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language)));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+
+});
+
+
+router.post('/update', auth.checkRoles('user_update'), async (req, res) => {
+  let body = req.body;
+  try {
+    let lang = req.user?.language;
+    let updates = {};
+    if (!body._id) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
+    }
+    if (!body.email) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.EMAIL_REQUIRED', lang));
+    }
+    if (!body.first_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.FIRST_NAME_REQUIRED', lang));
+    }
+    if (!body.last_name) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.LAST_NAME_REQUIRED', lang));
+    }
+    if (!body.phone_number) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PHONE_NUMBER_REQUIRED', lang));
+    }
+    if (body.password.length < PASSWORD_RULES.MIN_LENGTH) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PASSWORD_MIN_LENGTH', lang).replace('{0}', PASSWORD_RULES.MIN_LENGTH));
+    }
+    if (!body.password) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.PASSWORD_REQUIRED', lang));
+    }
+
+    if (body.roles && Array.isArray(body.roles) && body.roles.length > 0) {
+
+      let userRoles = await UserRoles.find({ user_id: body._id });
+
+      let removedRoles = userRoles.filter(role => !body.roles.includes(role.role_id.toString()));
+      let newRoles = body.roles.filter(role => !userRoles.map(r => r.role_id).includes(role));
+
+      if (removedRoles.length > 0) {
+        await UserRoles.deleteMany({ _id: { $in: removedRoles.map(r => r._id.toString()) } });
+      }
+
+      if (newRoles.length > 0) {
+        for (let role of newRoles) {
+          let userRole = new UserRoles({
+            user_id: body._id,
+            role_id: role,
+          });
+          await userRole.save();
+        }
+      }
+    }
+
+
+    let hashedPassword = await bcrypt.hashSync(body.password, bcrypt.genSaltSync(PASSWORD_RULES.SALT_ROUNDS), null);
+    updates.password = hashedPassword;
+    if (body.first_name) updates.first_name = body.first_name;
+    if (body.last_name) updates.last_name = body.last_name;
+    if (body.phone_number) updates.phone_number = body.phone_number;
+    if (body.email) updates.email = body.email;
+    if (body.language) updates.language = body.language;
+
+
+    const user = await Users.findByIdAndUpdate(body._id, updates, { new: true });
+    if (!user) {
+      throw new CustomError(HTTP_CODES.NOT_FOUND, i18n.translate('USERS.USER_NOT_FOUND', lang));
+    }
+
+    Auditlogs.info(req.user?.email, 'Users', 'update', user);
+    LoggerClass.info(req.user?.email, 'Users', 'update', user);
+
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('USERS.UPDATE_SUCCESS', lang)));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+
+router.post('/delete', auth.checkRoles('user_delete'), async (req, res) => {
+  let body = req.body;
+  try {
+    let lang = req.user?.language;
+    if (!body._id) {
+      throw new CustomError(HTTP_CODES.BAD_REQUEST, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('COMMON.ID_REQUIRED', lang));
+    }
+    await Users.findByIdAndDelete(body._id);
+    await UserRoles.deleteMany({ user_id: body._id });
+
+    Auditlogs.info(req.user?.email, 'Users', 'delete', {id: body._id});
+    LoggerClass.info(req.user?.email, 'Users', 'delete', {id: body._id});
+    
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('USERS.DELETE_SUCCESS', lang)));
+  } catch (error) {
+    let errorResponse = Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error, req.user?.language);
+    res.status(errorResponse.code).json(errorResponse);
+  }
+});
+
+
+
+
+module.exports = router;
+</file>
+
+<file path="views/error.ejs">
+<h1><%= message %></h1>
+<h2><%= error.status %></h2>
+<pre><%= error.stack %></pre>
+</file>
+
+<file path="views/index.ejs">
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <p>Welcome to <%= title %></p>
+  </body>
+</html>
+</file>
+
+<file path=".env.example">
+DB_HOST=
+DB_PORT=
+DB_NAME=
+LOG_LEVEL=
+PORT=
+</file>
+
+<file path=".gitignore">
+node_modules/
+.env
+</file>
+
+<file path="app.js">
+if (process.env.NODE_ENV !== 'production') {
+  require('dotenv').config();
+}
+
+var createError = require('http-errors');
+var express = require('express');
+var path = require('path');
+var cookieParser = require('cookie-parser');
+var logger = require('morgan');
+var Response = require('./lib/Response');
+var { HTTP_CODES } = require('./config/Enum');
+var CustomError = require('./lib/Error');
+
+var app = express();
+
+// view engine setup
+app.set('views', path.join(__dirname, 'views'));
+app.set('view engine', 'ejs');
+
+app.use(logger('dev'));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.use('/api', require('./routes/index'));
+
+
+// catch 404 and forward to error handler
+app.use(function(req, res) {
+  return res.sendStatus(404);
+});
+
+// error handler
+app.use(function(err, req, res) {
+
+  // set locals, only providing error in development
+
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  return res.json(Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, err, req.user?.language));
+});
+
+module.exports = app;
+</file>
+
+<file path="eslint.config.mjs">
+import js from "@eslint/js";
+import globals from "globals";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  { files: ["**/*.{js,mjs,cjs}"], plugins: { js }, extends: ["js/recommended"], languageOptions: { globals: { ...globals.browser, ...globals.node } }, rules: { "no-unused-vars": "warn" } },
+  { files: ["**/*.js"], languageOptions: { sourceType: "commonjs", globals: { ...globals.node } }, rules: { "no-unused-vars": "warn" } },
+]);
+</file>
+
+<file path="package.json">
+{
+  "name": "api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "start": "node ./bin/www",
+    "dev": "nodemon ./bin/www"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "chalk": "^5.6.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "debug": "^4.4.3",
+    "dotenv": "^17.4.2",
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "http-errors": "^2.0.1",
+    "jwt-simple": "^0.5.6",
+    "moment": "^2.30.1",
+    "mongoose": "^9.6.2",
+    "morgan": "^1.10.1",
+    "nodemon": "^3.1.14",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "slugify": "^1.6.9",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0"
+  }
+}
+</file>
+
+</files>
