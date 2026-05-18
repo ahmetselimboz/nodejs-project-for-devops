@@ -1,0 +1,314 @@
+================================================================================
+  DOCKER ÖĞRENME NOTLARI — Bu Projede Adım Adım Ne Yaptık, NEDEN Yaptık?
+================================================================================
+
+Bu dosyanın amacı sana komut ezberletmek DEĞİL. Her adımda "neden böyle?"
+sorusunu cevaplamak. Sonunda kendi başına benzer bir hatayı çözebilmen lazım.
+Her bölümün sonunda "KENDİNE SOR" kutusu var — oraya cevap veremiyorsan o
+bölümü tekrar oku.
+
+--------------------------------------------------------------------------------
+0. ÖNCE KAFADA OTURMASI GEREKEN 4 KAVRAM
+--------------------------------------------------------------------------------
+
+Bunları anlamadan Dockerfile düzeltmek = karanlıkta ok atmak.
+
+(a) IMAGE (imaj) vs CONTAINER (konteyner)
+    - Image = uygulamanın dondurulmuş bir "kalıbı" (tarif + malzemeler).
+    - Container = o kalıptan üretilmiş, çalışan canlı bir kopya.
+    - Bir image'tan istediğin kadar container çalıştırabilirsin.
+    - Analoji: Image = sınıf (class), Container = nesne (object/instance).
+
+(b) BUILD CONTEXT (inşa bağlamı) — BU PROJEDEKİ ASIL HATANIN KAYNAĞI
+    - `docker build ./api` dediğinde, Docker `api/` klasörünü baz alır.
+    - Dockerfile içindeki `COPY . .` veya `COPY package*.json ./` komutları
+      SADECE bu context (yani `api/`) içine bakabilir. Üst klasöre çıkamaz.
+    - Yani context = "Docker'ın görebildiği dünya". Dışındaki hiçbir şey yok.
+
+(c) KATMANLAR (layers) ve CACHE
+    - Dockerfile'daki her satır bir "katman" üretir.
+    - Bir satır değişmediyse Docker o katmanı yeniden üretmez, cache'ten alır.
+    - Bu yüzden önce `package.json` kopyalayıp `npm install` yapıp SONRA
+      `COPY . .` yaparız: kodun değişse bile bağımlılıklar cache'ten gelir,
+      build hızlanır. (Aşağıda tekrar göreceğiz.)
+
+(d) HOST vs CONTAINER AĞI (networking)
+    - Container'ın içindeki `127.0.0.1` (localhost), senin Mac'ini DEĞİL,
+      container'ın KENDİSİNİ gösterir. Her container ayrı bir "makine" gibi.
+    - Bu, 2. büyük hatamızın (MongoDB ECONNREFUSED) sebebiydi.
+
+KENDİNE SOR:
+  - "Build context" ne demek? `COPY ../bir_dosya .` neden çalışmaz?
+  - Container içindeki localhost neyi gösterir?
+
+--------------------------------------------------------------------------------
+1. PROBLEM: Elimizdeki Dockerfile build sırasında PATLIYORDU
+--------------------------------------------------------------------------------
+
+Projenin yapısı şöyleydi (DİKKAT: package.json kök dizinde DEĞİL, api/ içinde):
+
+    nodejs-project-for-devops/
+    └── api/                <-- Dockerfile burada, build context burası
+        ├── Dockerfile
+        ├── package.json
+        ├── app.js
+        ├── bin/  config/  db/  lib/  routes/  views/  public/  i18n/
+        └── node_modules/
+
+Eski Dockerfile'da şu satır vardı:
+
+    COPY --from=build /app/api ./api
+
+Neden hataydı?
+  - Build context = `api/` klasörü.
+  - Dockerfile'da `COPY . .` dediğimizde, `api/` KLASÖRÜNÜN İÇERİĞİ
+    container'da `/app` içine kopyalanır.
+  - Yani container'da `/app/app.js`, `/app/bin`, `/app/routes` OLUŞUR.
+  - AMA `/app/api` diye bir klasör OLUŞMAZ — çünkü context zaten `api/`'nin
+    kendisiydi, içinde tekrar bir `api/` yok.
+  - Sonuç: `"/app/api": not found` → build çöker.
+
+Düşünme şekli: "Context neyse, container'ın /app'i onun İÇERİĞİdir,
+KENDİSİ değil." Bir kutuyu açıp içindekileri masaya boşaltırsın; masada
+artık kutu yoktur, içindekiler vardır.
+
+KENDİNE SOR:
+  - Build context `api/` iken `/app/api` neden yok?
+  - Eğer context proje köküyle (`docker build .`) olsaydı, bu satır
+    çalışır mıydı? (Cevap: evet, çünkü o zaman /app/api gerçekten olurdu.
+    Bu yüzden hatanın kaynağı her zaman "context neresi?" sorusudur.)
+
+--------------------------------------------------------------------------------
+2. PROBLEM: Build geçse bile uygulama ÇALIŞMAZDI (eksik klasörler)
+--------------------------------------------------------------------------------
+
+app.js dosyasında şunlar vardı:
+
+    app.set('views', path.join(__dirname, 'views'));   // EJS şablonları
+    app.use(express.static(path.join(__dirname, 'public'))); // statik dosya
+    // ve route'lar i18n/ klasörünü kullanıyordu (dil çevirileri)
+
+Eski Dockerfile bu klasörleri runtime aşamasına KOPYALAMIYORDU.
+Yani container'da `views/`, `public/`, `i18n/` hiç yoktu → uygulama bir
+sayfa render etmeye veya çeviri okumaya çalışınca çökerdi.
+
+DERS: "Build başarılı" demek "uygulama çalışır" demek DEĞİL. Kodun
+RUNTIME'da neye ihtiyaç duyduğunu (okuduğu klasör/dosyalar) bilmen lazım.
+Dockerfile yazarken kendine sor: "Kod çalışırken hangi dosyalara dokunuyor?"
+
+KENDİNE SOR:
+  - Kodun `path.join(__dirname, 'views')` dediği bir klasör imaja
+    kopyalanmazsa ne olur, ne zaman olur (build'de mi, çalışırken mi)?
+
+--------------------------------------------------------------------------------
+3. MULTI-STAGE BUILD (Çok Aşamalı İnşa) — Neden 2 tane FROM var?
+--------------------------------------------------------------------------------
+
+Dockerfile'da 2 aşama var:
+
+    FROM node:20-alpine AS build      <-- 1. aşama: "build"
+    ...
+    FROM node:20-alpine AS runtime    <-- 2. aşama: "runtime"
+
+Mantık:
+  - build aşaması: TÜM bağımlılıkları kurar, kodu hazırlar (gerekirse
+    derleme/test burada yapılır). Burası "şantiye" — dağınık olabilir.
+  - runtime aşaması: TEMİZ ve sıfırdan başlar. build aşamasından SADECE
+    gereken dosyaları `COPY --from=build` ile alır.
+
+Kazanç: Son imaj küçük ve temiz olur. Geliştirme araçları, ara dosyalar,
+dev-bağımlılıkları son imaja bulaşmaz → daha küçük, daha güvenli imaj.
+
+`COPY --from=build /app/app.js ./app.js` satırındaki `--from=build`,
+"bu dosyayı 1. aşamadan al" demektir.
+
+KENDİNE SOR:
+  - Neden her şeyi tek FROM ile yapmıyoruz? Multi-stage'in somut faydası ne?
+
+--------------------------------------------------------------------------------
+4. npm install → npm ci  ve  --only=production → --omit=dev
+--------------------------------------------------------------------------------
+
+Yaptığımız değişiklik:
+    RUN npm install                 →  RUN npm ci
+    RUN npm install --only=production → RUN npm ci --omit=dev
+
+Neden `npm ci`?
+  - `npm ci` = "clean install". package-lock.json'a BİREBİR uyar.
+    Sürümleri kilitli kurar → her ortamda AYNI sonuç (deterministik).
+  - `npm install` lock dosyasını güncelleyebilir, sürüm kayması yaratabilir.
+  - CI/CD ve Docker'da kural: tekrar üretilebilirlik. Bu yüzden `npm ci`.
+  - (Şart: package-lock.json mevcut ve package.json ile uyumlu olmalı.
+    Bu projede vardı, sorun çıkmadı.)
+
+Neden `--omit=dev`?
+  - `--only=production` ESKİ (deprecated) yazım. Güncel karşılığı `--omit=dev`.
+  - Anlamı: devDependencies (jest, eslint, supertest...) KURULMASIN.
+    Prod imajında test/lint araçlarına gerek yok → daha küçük imaj.
+
+Ayrıca eklediğimiz:  ENV NODE_ENV=production
+  - app.js'de şu vardı:
+        if (process.env.NODE_ENV !== 'production') { require('dotenv').config(); }
+  - Yani prod'da .env dosyasını okumaya çalışmasın, ortam değişkenleri
+    dışarıdan (compose/`-e`) gelsin diye NODE_ENV'i production yaptık.
+
+KENDİNE SOR:
+  - `npm ci` ile `npm install` arasındaki en kritik fark nedir?
+  - Prod imajına neden jest/eslint koymak istemeyiz?
+
+--------------------------------------------------------------------------------
+5. .dockerignore — Neden ekledik?
+--------------------------------------------------------------------------------
+
+Oluşturduğumuz api/.dockerignore içeriği:
+    node_modules
+    .env
+    logs
+    .git
+    .gitignore
+    Dockerfile
+    .dockerignore
+    tests
+
+Sebep:
+  - `COPY . .` build context'teki HER ŞEYİ kopyalar. node_modules (yüzlerce
+    MB), .git geçmişi, loglar... hepsi gereksiz yere context'e girer →
+    build yavaşlar, imaj şişer.
+  - .env'i imaja gömmek GÜVENLİK riski (sırlar imaj katmanında kalır).
+  - .gitignore mantığının Docker'daki karşılığı budur.
+
+KENDİNE SOR:
+  - node_modules'ı neden .dockerignore'a koyduk, oysa lazım değil mi?
+    (İpucu: Zaten Dockerfile içinde `npm ci` ile container'da YENİDEN
+    kuruluyor. Host'tan kopyalanan node_modules yanlış platforma ait
+    olabilir — Mac'te kurulan binary, Linux container'da çalışmayabilir.)
+
+--------------------------------------------------------------------------------
+6. PROBLEM: "Connected" yerine ECONNREFUSED 127.0.0.1:27017
+--------------------------------------------------------------------------------
+
+Container çalıştı, "Listening on port 3000" yazdı, AMA:
+    MongooseServerSelectionError: connect ECONNREFUSED 127.0.0.1:27017
+
+Sebep (Bölüm 0-d'yi hatırla):
+  - .env'de DB_HOST=127.0.0.1 yazıyordu.
+  - config/index.js bağlantı adresini şöyle kuruyordu:
+        mongodb://${DB_HOST}:${DB_PORT}/${DB_NAME}
+  - Container içindeki 127.0.0.1 = container'ın kendisi. Container içinde
+    Mongo yok → bağlantı reddedildi.
+
+İki çözüm yolu:
+
+  Seçenek A (hızlı test, Mongo host Mac'inde çalışıyorsa):
+    docker run -p 3000:3000 -e DB_HOST=host.docker.internal --env-file .env imaj
+    - `host.docker.internal` = "container'dan host makineye eriş" özel adı
+      (Docker Desktop'ta hazır gelir).
+    - `-e` ile verilen değer, `--env-file`'dakini EZER (override).
+
+  Seçenek B (kalıcı, önerilen): docker-compose ile Mongo'yu da container yap.
+    → Bunu uyguladık (Bölüm 7).
+
+KENDİNE SOR:
+  - "ECONNREFUSED 127.0.0.1" gördüğünde aklına gelen İLK soru ne olmalı?
+    (Cevap: "Bu 127.0.0.1 kimin localhost'u — host'un mu, container'ın mı?")
+
+--------------------------------------------------------------------------------
+7. ÇÖZÜM: docker-compose.yml ile API + MongoDB birlikte
+--------------------------------------------------------------------------------
+
+Tek bir `docker run` ile birden fazla servisi (API + DB) yönetmek zor.
+docker-compose = "birden fazla container'ı tek dosyada tarifle, tek
+komutla kaldır".
+
+Oluşturduğumuz api/docker-compose.yml'in MANTIĞI (satır satır niye):
+
+  services:
+    api:
+      build: .                 # Bu klasördeki Dockerfile'dan imaj üret
+      ports: ["3000:3000"]     # host:container — Mac:3000 → container:3000
+      environment:
+        DB_HOST: mongo         # << EN KRİTİK SATIR. Artık 127.0.0.1 değil!
+        ...
+      depends_on:
+        mongo:
+          condition: service_healthy  # Mongo HAZIR olmadan api başlamasın
+
+    mongo:
+      image: mongo:7           # Hazır Mongo imajı, biz yazmıyoruz
+      volumes:
+        - mongo-data:/data/db  # Veri kalıcı olsun (container silinse bile)
+      healthcheck:             # "Mongo gerçekten hazır mı?" testi
+        test: ["CMD","mongosh","--eval","db.adminCommand('ping')"]
+        ...
+
+  volumes:
+    mongo-data:                # Named volume tanımı
+
+NEDEN `DB_HOST: mongo` çalışıyor?
+  - Compose, tüm servisleri AYNI sanal ağa koyar.
+  - Bu ağda her servise KENDİ ADIYLA erişilir. `mongo` yazınca Docker bunu
+    Mongo container'ının IP'sine çevirir (dahili DNS).
+  - Yani artık "localhost" derdi yok; servis adı = adres.
+
+NEDEN `depends_on` + `healthcheck`?
+  - Sadece `depends_on` "mongo BAŞLASIN" der ama "mongo HAZIR" demez.
+    Mongo başlaması 5-10 sn sürebilir; API o arada bağlanmaya çalışıp
+    çökerdi (ilk ECONNREFUSED'ın bir sebebi de buydu).
+  - `condition: service_healthy` = "healthcheck YEŞİL olana kadar api'yi
+    başlatma". Yarış durumunu (race condition) çözer.
+
+NEDEN named volume (mongo-data)?
+  - Container geçicidir; silinince içindeki veri de gider.
+  - Volume, veriyi container'ın DIŞINDA tutar. `down` yapsan bile kalır,
+    sadece `down -v` ile silinir.
+
+KENDİNE SOR:
+  - Compose ağında bir servise nasıl erişiyoruz — IP ezberleyerek mi?
+  - `depends_on` tek başına neden yetmez, healthcheck ne ekliyor?
+  - `docker compose down` ile `down -v` arasındaki fark veri açısından ne?
+
+--------------------------------------------------------------------------------
+8. SONUÇ: Çalıştığını nasıl DOĞRULADIK?
+--------------------------------------------------------------------------------
+
+    docker compose up -d --build      # build et + arka planda başlat
+    docker compose ps                 # iki container da Up, mongo healthy
+    docker compose logs api           # şu çıktıyı gördük:
+
+        Listening on port 3000
+        Connecting to MongoDB...
+        Connected to MongoDB!          <-- BAŞARI
+
+Önemli alışkanlık: Bir şeyi "çalıştı" saymadan önce LOG/STATUS ile
+DOĞRULA. "Hata vermedi" ≠ "doğru çalışıyor".
+
+--------------------------------------------------------------------------------
+9. GÜNLÜK KULLANIM KOMUTLARI (ezber değil, ne işe yaradığıyla)
+--------------------------------------------------------------------------------
+
+  docker compose up -d --build   Kod değişti → yeniden build edip başlat
+  docker compose ps              Hangi container ayakta, sağlık durumu ne
+  docker compose logs -f api     api loglarını canlı izle (-f = takip et)
+  docker compose down            Durdur. VERİ KALIR (volume'de)
+  docker compose down -v         Durdur + Mongo verisini de SİL
+  docker compose exec api sh     Çalışan api container'ının içine gir
+
+--------------------------------------------------------------------------------
+10. EZBERİ ÖNLEYEN ÖZET: 3 ALTIN SORU
+--------------------------------------------------------------------------------
+
+Docker'da bir hata gördüğünde sırayla bunları sor:
+
+  1) "BUILD CONTEXT neresi?"  → COPY/path hatalarının %90'ı buradan çıkar.
+  2) "Bu localhost/127.0.0.1 KİMİN localhost'u?" → ağ/bağlantı hatalarının
+     çoğu buradan çıkar (host mu, container mı?).
+  3) "Build başarılı olması RUNTIME'da çalışacağı anlamına gelmez —
+     kod çalışırken hangi dosya/servise ihtiyaç duyuyor?"
+
+Bu 3 soruyu refleks haline getirirsen, komut ezberlemene gerek kalmaz;
+yeni bir hatayı da kendin çözersin. Asıl öğrenme budur.
+
+================================================================================
+  Bitti. Anlamadığın bölümün "KENDİNE SOR" kutusuna dönüp cevap ver.
+  Cevaplayamıyorsan o bölümü tekrar oku — geçme.
+================================================================================

@@ -1,0 +1,37 @@
+services:
+  api:
+    build: .
+    container_name: nodejs-devops-api
+    ports:
+      - "3000:3000"
+    environment:
+      # Container ağında Mongo'ya servis adıyla erişilir
+      DB_HOST: mongo
+      DB_PORT: 27017
+      DB_NAME: test
+      PORT: 3000
+      LOG_LEVEL: debug
+      DEFAULT_LANGUAGE: EN
+      NODE_ENV: production
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    container_name: nodejs-devops-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
