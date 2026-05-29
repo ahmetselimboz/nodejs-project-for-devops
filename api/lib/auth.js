@@ -10,6 +10,7 @@ const config = require("../config");
 
 const privs = require("../config/role_privileges");
 const CustomError = require("./Error");
+const I18n = require("./i18n");
 
 module.exports = function () {
     let strategy = new Strategy({
@@ -60,19 +61,24 @@ module.exports = function () {
         checkRoles: (...expectedRoles) => {
             return (req, res, next) => {
                 // expectedRoles is an array of roles like ['user_add', 'user_update', 'user_delete']
-                // req.user.roles is an array of roles like [{key: 'user_view', name: 'User View', group: 'USERS'}, {key: 'auditlogs_view', name: 'AuditLogs View', group: 'AUDITLOGS'}]
                 let i = 0;
-                let privileges = req.user.roles.filter(x => x).map(x => x.key); // ['user_view', 'auditlogs_view']
+                var privileges; 
+                let lang = req.user?.language;
+                let i18n = new I18n();
+                const { ForbiddenError } = require('./errors/AppErrors');
 
-                while (i < expectedRoles.length && !privileges.includes(expectedRoles[i])) i++; 
+                if (req.user && req.user.roles && req.user.roles.length > 0){
+                    privileges = req.user.roles.filter(x => x).map(x => x.key);
+                    while (i < expectedRoles.length && !privileges.includes(expectedRoles[i])) i++;
 
-                // if (i >= expectedRoles.length) {
-                //     let response = Response.errorResponse(new CustomError(HTTP_CODES.UNAUTHORIZED, "Need Permission", "Need Permission"));
-                //     return res.status(response.code).json(response);
-                // }
-
+                    if (i >= expectedRoles.length) {
+                        return next(new ForbiddenError(i18n.translate('COMMON.FORBIDDEN_DESCRIPTION', lang), 'COMMON.FORBIDDEN'));
+                    }
+                } else {
+                    return next(new ForbiddenError(i18n.translate('COMMON.FORBIDDEN_DESCRIPTION', lang), 'COMMON.FORBIDDEN'));
+                }
+             
                 return next(); // Authorized
-
             }
         }
     }

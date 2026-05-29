@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nodejs-api
+spec:
+  replicas: 2 # Yüksek erişilebilirlik için 2 kopya [14]
+  selector:
+    matchLabels:
+      app: nodejs-api
+  template:
+    metadata:
+      labels:
+        app: nodejs-api
+    spec:
+      containers:
+      - name: api
+        image: nodejs-devops-api:v1 # Kendi oluşturduğun imaj [10]
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DB_HOST
+          value: "mongo"
+        - name: DB_NAME
+          value: "test"
+        # Daha önce eklediğimiz Health Check'ler: [10, 15]
+        livenessProbe:
+          httpGet:
+            path: /api/health/live
+            port: 3000
+          initialDelaySeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health/ready
+            port: 3000
+          initialDelaySeconds: 15

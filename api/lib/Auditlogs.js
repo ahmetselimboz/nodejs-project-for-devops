@@ -35,8 +35,8 @@ class Auditlogs {
         this.#saveToDB({level: LOG_LEVELS.HTTP, email, location, proc_type, log});
     }
 
-    #saveToDB({level, email, location, proc_type, log}) {
-       AuditLogs.create({level, email, location, proc_type, log});
+    async #saveToDB({level, email, location, proc_type, log}) {
+      await AuditLogs.create({level, email, location, proc_type, log});
 
     }
 }

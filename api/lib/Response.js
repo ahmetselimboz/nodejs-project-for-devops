@@ -65,7 +65,7 @@ class Response {
             success: false,
             error:{
                 message: i18n.translate('COMMON.INTERNAL_SERVER_ERROR', lang),
-                description: error.message
+                description: error?.message
             }
         }
     }

@@ -28,7 +28,7 @@ describe('POST /api/categories/add - Kategori Ekleme API', () => {
         // testten önce sahte bir token üretip .set('Authorization', `Bearer ${token}`) eklemelisiniz.
         
         const res = await request(app)
-            .post('/categories/add')
+            .post('/api/categories/add')
             .send({}); // Boş body gönderimi
         
         expect(res.status).toBe(401); // Yetkisiz erişim kontrolü veya validasyon hatası beklenir

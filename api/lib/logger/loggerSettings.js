@@ -1,11 +1,14 @@
 var winston = require("winston");
 const { LOG_LEVEL } = require("../../config/index");
 const path = require('path');
+const { getCorrelationId } = require('./context');
 
 const colorizer = winston.format.colorize();
 
-const buildLine = (info) =>
-  `${info.timestamp} ${info.level.toUpperCase()}: [email:${info.message.email}] [location:${info.message.location}] [procType:${info.message.proc_type}] [log:${JSON.stringify(info.message.log)}]`;
+const buildLine = (info) => {
+  const correlationId = getCorrelationId();
+  return `${info.timestamp} ${info.level.toUpperCase()}: [ReqID:${correlationId}] [email:${info.message?.email || 'unknown'}] [location:${info.message?.location || 'unknown'}] [procType:${info.message?.proc_type || 'unknown'}] [log:${JSON.stringify(info.message?.log || info.message)}]`;
+};
 
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss.SSS" }),

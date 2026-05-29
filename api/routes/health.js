@@ -3,36 +3,33 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const Response = require('../lib/Response');
 const { HTTP_CODES } = require('../config/Enum');
+const I18n = require('../lib/i18n');
+const catchAsync = require('../lib/utils/catchAsync');
+
+const i18n = new I18n();
 
 /**
- * Liveness Probe: Uygulama süreci (process) yaşıyor mu?
- * Kubernetes bu endpoint'ten yanıt alamazsa konteyneri restart eder.
+ * Liveness Probe: Is the application process alive?
+ * Kubernetes restarts the container if this endpoint doesn't respond.
  */
 router.get('/live', (req, res) => {
-    res.json(Response.successResponse(HTTP_CODES.OK, "I am alive!"));
+    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('HEALTH.ALIVE')));
 });
 
 /**
- * Readiness Probe: Uygulama trafik almaya hazır mı?
- * Sadece süreç değil, veritabanı bağlantısı da kontrol edilir.
+ * Readiness Probe: Is the application ready to accept traffic?
+ * Checks both process and database connection health.
  */
-router.get('/ready', async (req, res) => {
-    try {
-        // MongoDB bağlantı durumunu kontrol et (1 = connected)
-        const isDbConnected = mongoose.connection.readyState === 1;
-        
-        if (isDbConnected) {
-            res.json(Response.successResponse(HTTP_CODES.OK, "System is ready for traffic."));
-        } else {
-            res.status(HTTP_CODES.INT_SERVER_ERROR).json(
-                Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, "Database connection is not ready.")
-            );
-        }
-    } catch (error) {
+router.get('/ready', catchAsync(async (req, res) => {
+    const isDbConnected = mongoose.connection.readyState === 1;
+
+    if (isDbConnected) {
+        res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('HEALTH.READY')));
+    } else {
         res.status(HTTP_CODES.INT_SERVER_ERROR).json(
-            Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, error.message)
+            Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, new Error(i18n.translate('HEALTH.DB_NOT_READY')))
         );
     }
-});
+}));
 
 module.exports = router;

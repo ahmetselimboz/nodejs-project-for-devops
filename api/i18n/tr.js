@@ -17,6 +17,9 @@ module.exports = {
         "ALREADY_EXISTS_DESCRIPTION": "Oluşturmaya çalıştığınız kayıt zaten mevcut.",
         "ID_REQUIRED": "_id alanı zorunludur",
         "FIELD_REQUIRED": "{0} alanı zorunludur",
+        "TOO_MANY_REQUESTS": "Çok Fazla İstek",
+        "TOO_MANY_REQUESTS_DESCRIPTION": "Bu IP adresinden çok fazla istek gönderildi, lütfen daha sonra tekrar deneyin.",
+        "RATE_LIMIT_AUTH": "Çok fazla başarısız giriş denemesi. 15 dakika süreyle engellendiniz."
     },
     "USERS": {
         "USER_NOT_FOUND": "Kullanıcı bulunamadı",
@@ -32,11 +35,14 @@ module.exports = {
         "EMAIL_OR_PASSWORD_INVALID": "E-posta veya parola geçersiz",
         "CREATE_SUCCESS": "Kullanıcı başarıyla oluşturuldu",
         "UPDATE_SUCCESS": "Kullanıcı başarıyla güncellendi",
-        "DELETE_SUCCESS": "Kullanıcı başarıyla silindi"
+        "DELETE_SUCCESS": "Kullanıcı başarıyla silindi",
+        "NEED_PERMISSION": "Erişim izni gerekiyor",
+        "DONT_HAVE_PERMISSION": "Erişim izniniz yok"
     },
     "CATEGORIES": {
         "NAME_REQUIRED": "İsim alanı zorunludur",
         "NOT_FOUND": "Kategori bulunamadı",
+        "NOT_FOUND_DESCRIPTION": "Aradığınız kategori mevcut değil.",
         "CREATE_SUCCESS": "Kategori başarıyla oluşturuldu",
         "UPDATE_SUCCESS": "Kategori başarıyla güncellendi",
         "DELETE_SUCCESS": "Kategori başarıyla silindi"
@@ -45,8 +51,20 @@ module.exports = {
         "ROLE_NAME_REQUIRED": "Rol adı zorunludur",
         "PERMISSIONS_REQUIRED": "İzinler zorunludur",
         "NOT_FOUND": "Rol bulunamadı",
+        "NOT_FOUND_DESCRIPTION": "Aradığınız rol mevcut değil.",
         "CREATE_SUCCESS": "Rol başarıyla oluşturuldu",
         "UPDATE_SUCCESS": "Rol başarıyla güncellendi",
         "DELETE_SUCCESS": "Rol başarıyla silindi"
+    },
+    "AUDITLOGS": {
+        "INVALID_LIMIT": "Limit bir sayı olmalı ve 500'ü geçemez.",
+        "INVALID_SKIP": "Skip bir sayı olmalıdır.",
+        "INVALID_SORT": "Sıralama bir nesne olmalıdır.",
+        "INVALID_DATE_RANGE": "Başlangıç ve bitiş tarihi birlikte gönderilmelidir."
+    },
+    "HEALTH": {
+        "ALIVE": "Sistem çalışıyor!",
+        "READY": "Sistem trafiğe hazır.",
+        "DB_NOT_READY": "Veritabanı bağlantısı hazır değil."
     }
 }
