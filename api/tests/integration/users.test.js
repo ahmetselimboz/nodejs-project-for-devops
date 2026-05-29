@@ -11,7 +11,7 @@ beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
   await mongoose.connect(mongoUri);
-});
+}, 60000);
 
 // Tüm testler bittikten sonra 1 kere çalışır
 afterAll(async () => {
