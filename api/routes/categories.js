@@ -14,12 +14,12 @@ const { NotFoundError } = require('../lib/errors/AppErrors');
 
 const i18n = new I18n();
 
-router.use(auth.authenticate());
+//router.use(auth.authenticate());
 
 /**
  * List all categories
  */
-router.get('/', auth.checkRoles('category_view'), catchAsync(async (req, res) => {
+router.get('/', catchAsync(async (req, res) => {
   const categories = await Categories.find();
   Response.successResponse(res, HTTP_CODES.OK, categories);
 }));

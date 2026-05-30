@@ -63,7 +63,7 @@ module.exports = {
         "INVALID_DATE_RANGE": "Begin date and end date must both be provided."
     },
     "HEALTH": {
-        "ALIVE": "I am alive2!",
+        "ALIVE": "I am alive!",
         "READY": "System is ready for traffic.",
         "DB_NOT_READY": "Database connection is not ready."
     }
