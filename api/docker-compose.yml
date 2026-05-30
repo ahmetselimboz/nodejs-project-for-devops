@@ -1,6 +1,6 @@
 services:
   api:
-    build: .
+    image: asb00/nodejs-devops-api:latest # Docker Hub'daki imajı işaret et
     container_name: nodejs-devops-api
     ports:
       - "3000:3000"
