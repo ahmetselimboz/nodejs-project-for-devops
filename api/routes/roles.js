@@ -36,7 +36,7 @@ router.get('/', auth.checkRoles('role_view'), catchAsync(async (req, res) => {
       .map(rp => rp.permission)
   }));
 
-  res.json(Response.successResponse(HTTP_CODES.OK, roleData));
+  Response.successResponse(res, HTTP_CODES.OK, roleData);
 }));
 
 /**
@@ -68,7 +68,7 @@ router.post('/add', auth.checkRoles('role_add'), validate(addRoleSchema), catchA
   Auditlogs.info(req.user?.email, 'Roles', 'add', roleData);
   LoggerClass.info(req.user?.email, 'Roles', 'add', roleData);
 
-  res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('ROLES.CREATE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.CREATED, i18n.translate('ROLES.CREATE_SUCCESS', lang));
 }));
 
 /**
@@ -114,7 +114,7 @@ router.post('/update', auth.checkRoles('role_update'), validate(updateRoleSchema
   Auditlogs.info(req.user?.email, 'Roles', 'update', updates);
   LoggerClass.info(req.user?.email, 'Roles', 'update', updates);
 
-  res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.UPDATE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.OK, i18n.translate('ROLES.UPDATE_SUCCESS', lang));
 }));
 
 /**
@@ -136,14 +136,14 @@ router.post('/delete', auth.checkRoles('role_delete'), validate(deleteRoleSchema
   Auditlogs.info(req.user?.email, 'Roles', 'delete', { id: body._id });
   LoggerClass.info(req.user?.email, 'Roles', 'delete', { id: body._id });
 
-  res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('ROLES.DELETE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.OK, i18n.translate('ROLES.DELETE_SUCCESS', lang));
 }));
 
 /**
  * Get all available role privilege definitions
  */
 router.get('/role-privileges', auth.checkRoles('role_view'), catchAsync(async (req, res) => {
-  res.json(Response.successResponse(HTTP_CODES.OK, rolePrivilegesConfig));
+  Response.successResponse(res, HTTP_CODES.OK, rolePrivilegesConfig);
 }));
 
 module.exports = router;

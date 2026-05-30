@@ -58,7 +58,7 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
   });
   await userRole.save();
 
-  res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language)));
+  Response.successResponse(res, HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language));
 }));
 
 /**
@@ -92,10 +92,10 @@ router.post('/auth', validate(authSchema), catchAsync(async (req, res) => {
   let roles = await Roles.find({ _id: { $in: userRoles.map(ur => ur.role_id) } });
   userData.roles = roles.map(r => r.role_name);
 
-  res.json(Response.successResponse(HTTP_CODES.OK, {
+  Response.successResponse(res, HTTP_CODES.OK, {
     user: userData,
     token: token
-  }));
+  });
 }));
 
 // Apply authentication middleware for all subsequent routes
@@ -148,7 +148,7 @@ router.get('/', auth.checkRoles('user_view'), catchAsync(async (req, res) => {
     };
   });
 
-  res.json(Response.successResponse(HTTP_CODES.OK, userData));
+  Response.successResponse(res, HTTP_CODES.OK, userData);
 }));
 
 /**
@@ -186,7 +186,7 @@ router.post('/add', auth.checkRoles('user_add'), validate(addSchema), catchAsync
   Auditlogs.info(req.user?.email, 'Users', 'add', user);
   LoggerClass.info(req.user?.email, 'Users', 'add', user);
 
-  res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language)));
+  Response.successResponse(res, HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language));
 }));
 
 /**
@@ -237,7 +237,7 @@ router.post('/update', auth.checkRoles('user_update'), validate(updateSchema), c
   Auditlogs.info(req.user?.email, 'Users', 'update', user);
   LoggerClass.info(req.user?.email, 'Users', 'update', user);
 
-  res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('USERS.UPDATE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.OK, i18n.translate('USERS.UPDATE_SUCCESS', lang));
 }));
 
 /**
@@ -257,7 +257,7 @@ router.post('/delete', auth.checkRoles('user_delete'), validate(deleteSchema), c
   Auditlogs.info(req.user?.email, 'Users', 'delete', {id: body._id});
   LoggerClass.info(req.user?.email, 'Users', 'delete', {id: body._id});
   
-  res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('USERS.DELETE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.OK, i18n.translate('USERS.DELETE_SUCCESS', lang));
 }));
 
 module.exports = router;

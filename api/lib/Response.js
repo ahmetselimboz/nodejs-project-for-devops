@@ -28,12 +28,13 @@ class Response {
     }
 
 
-    static successResponse(code, data){
-        return {
+    static successResponse(res, code, data){
+        const payload = {
             code: code || HTTP_CODES.OK,
             success: true,
             data
-        }
+        };
+        return res.status(payload.code).json(payload);
     }
 
     static errorResponse(code, error, lang){

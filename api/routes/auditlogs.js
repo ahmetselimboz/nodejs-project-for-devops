@@ -44,7 +44,7 @@ router.post('/', auth.checkRoles('auditlogs_view'), validate(queryAuditlogsSchem
     .select(select)
     .populate(populate);
 
-  res.json(Response.successResponse(HTTP_CODES.OK, auditLogs, count));
+  Response.successResponse(res, HTTP_CODES.OK, auditLogs, count);
 }));
 
 module.exports = router;

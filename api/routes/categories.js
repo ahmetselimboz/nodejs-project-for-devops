@@ -21,7 +21,7 @@ router.use(auth.authenticate());
  */
 router.get('/', auth.checkRoles('category_view'), catchAsync(async (req, res) => {
   const categories = await Categories.find();
-  res.json(Response.successResponse(HTTP_CODES.OK, categories));
+  Response.successResponse(res, HTTP_CODES.OK, categories);
 }));
 
 /**
@@ -40,7 +40,7 @@ router.post('/add', auth.checkRoles('category_add'), validate(addCategorySchema)
   Auditlogs.info(req.user?.email, 'Categories', 'add', category.toObject());
   LoggerClass.info(req.user?.email, 'Categories', 'add', category.toObject());
 
-  res.json(Response.successResponse(HTTP_CODES.CREATED, i18n.translate('CATEGORIES.CREATE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.CREATED, i18n.translate('CATEGORIES.CREATE_SUCCESS', lang));
 }));
 
 /**
@@ -62,7 +62,7 @@ router.post('/update', auth.checkRoles('category_update'), validate(updateCatego
   Auditlogs.info(req.user?.email, 'Categories', 'update', { _id: body._id, ...updates });
   LoggerClass.info(req.user?.email, 'Categories', 'update', { _id: body._id, ...updates });
 
-  res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('CATEGORIES.UPDATE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.OK, i18n.translate('CATEGORIES.UPDATE_SUCCESS', lang));
 }));
 
 /**
@@ -80,7 +80,7 @@ router.post('/delete', auth.checkRoles('category_delete'), validate(deleteCatego
   Auditlogs.info(req.user?.email, 'Categories', 'delete', { _id: body._id });
   LoggerClass.info(req.user?.email, 'Categories', 'delete', { _id: body._id });
 
-  res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('CATEGORIES.DELETE_SUCCESS', lang)));
+  Response.successResponse(res, HTTP_CODES.OK, i18n.translate('CATEGORIES.DELETE_SUCCESS', lang));
 }));
 
 module.exports = router;

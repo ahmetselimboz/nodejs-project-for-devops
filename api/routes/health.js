@@ -13,7 +13,7 @@ const i18n = new I18n();
  * Kubernetes restarts the container if this endpoint doesn't respond.
  */
 router.get('/live', (req, res) => {
-    res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('HEALTH.ALIVE')));
+    Response.successResponse(res, HTTP_CODES.OK, i18n.translate('HEALTH.ALIVE'));
 });
 
 /**
@@ -24,7 +24,7 @@ router.get('/ready', catchAsync(async (req, res) => {
     const isDbConnected = mongoose.connection.readyState === 1;
 
     if (isDbConnected) {
-        res.json(Response.successResponse(HTTP_CODES.OK, i18n.translate('HEALTH.READY')));
+        Response.successResponse(res, HTTP_CODES.OK, i18n.translate('HEALTH.READY'));
     } else {
         res.status(HTTP_CODES.INT_SERVER_ERROR).json(
             Response.errorResponse(HTTP_CODES.INT_SERVER_ERROR, new Error(i18n.translate('HEALTH.DB_NOT_READY')))
