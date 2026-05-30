@@ -44,6 +44,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
-       
+            cd ~/nodejs-project-for-devops
+            cd api
             docker compose pull # Yeni imajı Docker Hub'dan çek
-            docker compose up -d # Konteynerleri güncelle ve arkada çalıştır [12]
+            docker compose up -d # Konteynerleri güncelle ve arkada çalıştır
