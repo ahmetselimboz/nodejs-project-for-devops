@@ -31,6 +31,6 @@ describe('POST /api/categories/add - Kategori Ekleme API', () => {
             .post('/api/categories/add')
             .send({}); // Boş body gönderimi
         
-        expect(res.status).toBe(403); // Yetkisiz erişim kontrolü veya validasyon hatası beklenir
+        expect(res.status).toBe(401); // Yetkisiz erişim kontrolü veya validasyon hatası beklenir
     });
 });
