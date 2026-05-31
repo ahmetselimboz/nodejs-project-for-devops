@@ -13,6 +13,7 @@ services:
       LOG_LEVEL: debug
       DEFAULT_LANGUAGE: EN
       NODE_ENV: production
+      GRAFANA_ADMIN_PASSWORD=Ahmet+401292
     depends_on:
       mongo:
         condition: service_healthy
