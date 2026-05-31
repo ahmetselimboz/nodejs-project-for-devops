@@ -15,6 +15,7 @@ var { HTTP_CODES } = require('./config/Enum');
 var CustomError = require('./lib/Error');
 const { contextMiddleware } = require('./lib/logger/context');
 const I18n = require('./lib/i18n');
+const client = require('prom-client');
 
 const i18n = new I18n();
 
@@ -70,6 +71,14 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
+
+const collectDefaultMetrics = client.collectDefaultMetrics;
+collectDefaultMetrics({ register: client.register });
+
+app.get('/metrics', async (req, res) => {
+  res.setHeader('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
+});
 
 app.use('/api', require('./routes/index'));
 
