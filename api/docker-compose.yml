@@ -81,6 +81,13 @@ services:
     ports:
       - "3001:3000" # Dışarıdan 3001 ile erişeceğiz
     environment:
+      - GF_SMTP_ENABLED=true
+      - GF_SMTP_HOST=mail.selimboz.com:465
+      - GF_SMTP_USER=ahmetselimboz@selimboz.com
+      - GF_SMTP_PASSWORD=Ahmet+401292
+      - GF_SMTP_SKIP_VERIFY=true
+      - GF_SMTP_FROM_ADDRESS=ahmetselimboz@selimboz.com
+      - GF_SMTP_FROM_NAME=Grafana-Alerts
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
       - GF_SERVER_ROOT_URL=http://45.138.25.195/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true

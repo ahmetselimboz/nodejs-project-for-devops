@@ -15,7 +15,7 @@ var { HTTP_CODES } = require('./config/Enum');
 var CustomError = require('./lib/Error');
 const { contextMiddleware } = require('./lib/logger/context');
 const I18n = require('./lib/i18n');
-const client = require('prom-client');
+const promBundle = require('express-prom-bundle');
 
 const i18n = new I18n();
 
@@ -72,13 +72,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-const collectDefaultMetrics = client.collectDefaultMetrics;
-collectDefaultMetrics({ register: client.register });
-
-app.get('/metrics', async (req, res) => {
-  res.setHeader('Content-Type', client.register.contentType);
-  res.send(await client.register.metrics());
+// Prometheus Metrics Middleware
+// This automatically registers the /metrics endpoint and collects HTTP request metrics
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+  includeStatusCode: true,
+  includeUp: true,
+  promClient: {
+    collectDefaultMetrics: {}
+  }
 });
+app.use(metricsMiddleware);
 
 app.use('/api', require('./routes/index'));
 
