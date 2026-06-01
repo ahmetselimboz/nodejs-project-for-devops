@@ -13,7 +13,7 @@ services:
       LOG_LEVEL: debug
       DEFAULT_LANGUAGE: EN
       NODE_ENV: production
-      GRAFANA_ADMIN_PASSWORD=Ahmet+401292
+      GRAFANA_ADMIN_PASSWORD: Ahmet+401292
     depends_on:
       mongo:
         condition: service_healthy
@@ -62,6 +62,7 @@ services:
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--web.external-url=http://45.138.25.195/prometheus/'
     ports:
       - "9090:9090"
     restart: unless-stopped
@@ -81,7 +82,7 @@ services:
       - "3001:3000" # Dışarıdan 3001 ile erişeceğiz
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s:%(http_port)s/grafana/
+      - GF_SERVER_ROOT_URL=http://45.138.25.195/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - grafana-data:/var/lib/grafana
