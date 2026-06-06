@@ -4,6 +4,8 @@ services:
     container_name: nodejs-devops-api
     ports:
       - "3000:3000"
+    volumes:
+      - ./logs:/app/logs
     environment:
       # Container ağında Mongo'ya servis adıyla erişilir
       DB_HOST: mongo
