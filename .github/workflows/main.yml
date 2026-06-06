@@ -45,6 +45,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             cd ~/nodejs-project-for-devops
+            git pull origin main
             cd api
             docker compose pull # Yeni imajı Docker Hub'dan çek
             docker compose up -d # Konteynerleri güncelle ve arkada çalıştır
