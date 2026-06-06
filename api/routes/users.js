@@ -17,6 +17,7 @@ const LoggerClass = require('../lib/logger/logger');
 const validate = require('../lib/middlewares/validate');
 const { registerSchema, authSchema, addSchema, updateSchema, deleteSchema } = require('../lib/schemas/UserSchemas');
 const catchAsync = require('../lib/utils/catchAsync');
+const { loginAttemptsCounter, registrationsCounter, dbOperationDuration } = require('../lib/metrics');
 
 const i18n = new I18n();
 var router = express.Router();
@@ -61,6 +62,9 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
 
   await userRole.save();
 
+  // Increment registrations counter
+  registrationsCounter.inc({ role: SUPER_ADMIN });
+
   Response.successResponse(res, HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language));
 }));
 
@@ -71,10 +75,17 @@ router.post('/auth', validate(authSchema), catchAsync(async (req, res) => {
   let lang = req.user?.language;
   let { email, password } = req.body;
 
+  // Track db operation duration for user lookup
+  const endTimer = dbOperationDuration.startTimer({ model: 'Users', operation: 'findOne' });
   let user = await Users.findOne({ email: email });
+  endTimer();
+
   if (!user || !user.validPassword(password)) {
+    loginAttemptsCounter.inc({ status: 'failure' });
     throw new CustomError(HTTP_CODES.UNAUTHORIZED, i18n.translate('COMMON.VALIDATION_ERROR', lang), i18n.translate('USERS.EMAIL_OR_PASSWORD_INVALID', lang));
   }
+
+  loginAttemptsCounter.inc({ status: 'success' });
 
   let payload = {
     id: user._id,
@@ -185,6 +196,9 @@ router.post('/add', auth.checkRoles('user_add'), validate(addSchema), catchAsync
     });
     await userRole.save();
   }
+
+  // Increment registrations counter for each role added
+  roles.forEach(r => registrationsCounter.inc({ role: r.role_name }));
 
   Auditlogs.info(req.user?.email, 'Users', 'add', user);
   LoggerClass.info(req.user?.email, 'Users', 'add', user);

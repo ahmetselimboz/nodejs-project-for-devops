@@ -16,6 +16,7 @@ var CustomError = require('./lib/Error');
 const { contextMiddleware } = require('./lib/logger/context');
 const I18n = require('./lib/i18n');
 const promBundle = require('express-prom-bundle');
+const { errorCounter } = require('./lib/metrics');
 
 const i18n = new I18n();
 
@@ -48,6 +49,7 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
 app.use('/api', limiter);
 
 // 4. Stricter Rate Limiter for Auth (Brute-Force Protection)
@@ -100,6 +102,12 @@ app.use(function(err, req, res, next) {
   // Formulate the standardized error response
   const errorResponse = Response.errorResponse(err.code || err.status || 500, err, req.user?.language);
   
+  // Increment error counter with the error type and status code
+  errorCounter.inc({ 
+    error_name: err.name || 'Error', 
+    status_code: String(errorResponse.code) 
+  });
+
   // Dynamically set the HTTP status code to align with the error payload status code!
   res.status(errorResponse.code);
   return res.json(errorResponse);
