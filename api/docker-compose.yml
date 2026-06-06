@@ -114,7 +114,7 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     volumes:
-      - ./api/logs:/var/log/api-logs # API loglarını Promtail'e bağla
+      - ./logs:/var/log/api-logs # API loglarını Promtail'e bağla
       - ./promtail-config.yaml:/etc/promtail/config.yaml
     command: -config.file=/etc/promtail/config.yaml
 
@@ -122,3 +122,4 @@ volumes:
   mongo-data:
   prometheus-data:
   grafana-data:
+  

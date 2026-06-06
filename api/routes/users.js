@@ -42,6 +42,7 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
     last_name: body.last_name,
     phone_number: body.phone_number,
   });
+  
   await user.save();
 
   let role = new Roles({
@@ -49,6 +50,7 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
     is_active: true,
     created_by: user._id
   });
+
   await role.save();
 
   let userRole = new UserRoles({
@@ -56,6 +58,7 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
     role_id: role._id,
     created_by: user._id
   });
+
   await userRole.save();
 
   Response.successResponse(res, HTTP_CODES.CREATED, i18n.translate('USERS.CREATE_SUCCESS', req.user?.language));
