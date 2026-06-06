@@ -103,6 +103,21 @@ services:
           cpus: '0.25'
           memory: 256M
 
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    volumes:
+      - ./api/logs:/var/log/api-logs # API loglarını Promtail'e bağla
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
+
 volumes:
   mongo-data:
   prometheus-data:
