@@ -17,7 +17,7 @@ const LoggerClass = require('../lib/logger/logger');
 const validate = require('../lib/middlewares/validate');
 const { registerSchema, authSchema, addSchema, updateSchema, deleteSchema } = require('../lib/schemas/UserSchemas');
 const catchAsync = require('../lib/utils/catchAsync');
-const { loginAttemptsCounter, registrationsCounter, dbOperationDuration } = require('../lib/metrics');
+const { loginAttemptsCounter, registrationsCounter } = require('../lib/metrics');
 
 const i18n = new I18n();
 var router = express.Router();
@@ -43,7 +43,7 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
     last_name: body.last_name,
     phone_number: body.phone_number,
   });
-  
+
   await user.save();
 
   let role = new Roles({
@@ -62,6 +62,49 @@ router.post('/register', validate(registerSchema), catchAsync(async (req, res) =
 
   await userRole.save();
 
+let permissions = [
+  "user_view",
+  "user_add",
+  "user_update",
+  "user_delete",
+  "role_view",
+  "role_add",
+  "role_update",
+  "role_delete",
+  "category_view",
+  "category_add",
+  "category_update",
+  "category_delete",
+  "category_export",
+  "auditlogs_view",
+  "auditlogs_add",
+  "auditlogs_update",
+  "auditlogs_delete"
+];
+
+
+  let existingPermissions = await RolePrivileges.find({ role_id: role._id });
+
+  let removedPermissions = existingPermissions.filter(
+    p => !permissions.includes(p.permission)
+  );
+  let newPermissions = permissions.filter(
+    p => !existingPermissions.map(ep => ep.permission).includes(p)
+  );
+
+  if (removedPermissions.length > 0) {
+    await RolePrivileges.deleteMany({ _id: { $in: removedPermissions.map(p => p._id) } });
+  }
+
+  for (let permission of newPermissions) {
+    let rp = new RolePrivileges({
+      role_id: role._id,
+      permission: permission,
+      created_by: user._id
+    });
+    await rp.save();
+  }
+
   // Increment registrations counter
   registrationsCounter.inc({ role: SUPER_ADMIN });
 
@@ -75,10 +118,8 @@ router.post('/auth', validate(authSchema), catchAsync(async (req, res) => {
   let lang = req.user?.language;
   let { email, password } = req.body;
 
-  // Track db operation duration for user lookup
-  const endTimer = dbOperationDuration.startTimer({ model: 'Users', operation: 'findOne' });
+  // DB operation duration is tracked globally via the Mongoose metrics plugin.
   let user = await Users.findOne({ email: email });
-  endTimer();
 
   if (!user || !user.validPassword(password)) {
     loginAttemptsCounter.inc({ status: 'failure' });
@@ -239,7 +280,7 @@ router.post('/update', auth.checkRoles('user_update'), validate(updateSchema), c
     let hashedPassword = await bcrypt.hashSync(body.password, bcrypt.genSaltSync(PASSWORD_RULES.SALT_ROUNDS), null);
     updates.password = hashedPassword;
   }
-  
+
   if (body.first_name) updates.first_name = body.first_name;
   if (body.last_name) updates.last_name = body.last_name;
   if (body.phone_number) updates.phone_number = body.phone_number;
@@ -268,12 +309,12 @@ router.post('/delete', auth.checkRoles('user_delete'), validate(deleteSchema), c
   if (!user) {
     throw new NotFoundError(i18n.translate('USERS.USER_NOT_FOUND', lang));
   }
-  
+
   await UserRoles.deleteMany({ user_id: body._id });
 
-  Auditlogs.info(req.user?.email, 'Users', 'delete', {id: body._id});
-  LoggerClass.info(req.user?.email, 'Users', 'delete', {id: body._id});
-  
+  Auditlogs.info(req.user?.email, 'Users', 'delete', { id: body._id });
+  LoggerClass.info(req.user?.email, 'Users', 'delete', { id: body._id });
+
   Response.successResponse(res, HTTP_CODES.OK, i18n.translate('USERS.DELETE_SUCCESS', lang));
 }));
 

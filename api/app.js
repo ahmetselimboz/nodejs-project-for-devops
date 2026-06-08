@@ -10,6 +10,7 @@ var logger = require('morgan');
 var helmet = require('helmet');
 var rateLimit = require('express-rate-limit');
 
+var mongoose = require('mongoose');
 var Response = require('./lib/Response');
 var { HTTP_CODES } = require('./config/Enum');
 var CustomError = require('./lib/Error');
@@ -17,6 +18,10 @@ const { contextMiddleware } = require('./lib/logger/context');
 const I18n = require('./lib/i18n');
 const promBundle = require('express-prom-bundle');
 const { errorCounter } = require('./lib/metrics');
+
+// Register the global DB instrumentation plugin BEFORE any model is compiled
+// (the route files below pull in the Mongoose models, so this must run first).
+mongoose.plugin(require('./lib/dbMetricsPlugin'));
 
 const i18n = new I18n();
 
