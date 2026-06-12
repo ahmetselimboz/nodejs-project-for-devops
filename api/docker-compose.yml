@@ -1,9 +1,21 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: reverse-proxy
+    ports:
+      - "80:80"   # Sadece bu portu dış dünyaya açıyoruz
+      - "443:443" # İleride SSL için
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - grafana
+    restart: unless-stopped
   api:
     image: asb00/nodejs-devops-api:latest # Docker Hub'daki imajı işaret et
     container_name: nodejs-devops-api
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     volumes:
       - ./logs:/app/logs
     environment:
@@ -37,8 +49,8 @@ services:
   mongo:
     image: mongo:7
     container_name: nodejs-devops-mongo
-    ports:
-      - "27017:27017"
+    expose:
+      - "27017"
     volumes:
       - mongo-data:/data/db
     healthcheck:
@@ -65,8 +77,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--web.external-url=http://45.138.25.195/prometheus/'
-    ports:
-      - "9090:9090"
+    expose:
+      - "9090"
     restart: unless-stopped
     deploy:
       resources:
@@ -80,8 +92,6 @@ services:
   grafana:
     image: grafana/grafana:latest
     container_name: grafana
-    ports:
-      - "3001:3000" # Dışarıdan 3001 ile erişeceğiz
     environment:
       - GF_SMTP_ENABLED=true
       - GF_SMTP_HOST=mail.selimboz.com:465

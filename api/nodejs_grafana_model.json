@@ -573,7 +573,7 @@
                     "kind": "DataQuery",
                     "spec": {
                       "editorMode": "code",
-                      "expr": "sum(http_request_duration_seconds_count{status_code=~\"4..\"})",
+                      "expr": "sum(http_request_duration_seconds_count{status_code=~\"4..\"}) or vector(0)",
                       "instant": false,
                       "legendFormat": "__auto",
                       "range": true
@@ -660,7 +660,7 @@
                     "kind": "DataQuery",
                     "spec": {
                       "editorMode": "code",
-                      "expr": "sum(http_request_duration_seconds_count{status_code=~\"5..\"})",
+                      "expr": "sum(http_request_duration_seconds_count{status_code=~\"5..\"}) or vector(0)",
                       "instant": false,
                       "legendFormat": "__auto",
                       "range": true

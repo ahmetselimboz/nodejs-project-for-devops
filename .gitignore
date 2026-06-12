@@ -1,3 +1,14 @@
 *.pem
 .env
 node_modules/
+
+# Terraform - hassas ve uretilen dosyalar (API token, state, indirilen provider'lar)
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+*.tfvars
+crash.log
+crash.*.log
+
+# Guvenlik denetim ciktilari - sunucunun guvenlik detaylarini icerir, repoya girmemeli
+security/audit-*.log

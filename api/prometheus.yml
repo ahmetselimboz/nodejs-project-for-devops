@@ -7,4 +7,4 @@ scrape_configs:
       - targets: ['node-exporter:9100']
   - job_name: 'nodejs-api'
     static_configs:
-      - targets: ['api:3000'] # api konteyner ismini kullanıyoruz
+      - targets: ['api:3000'] 
