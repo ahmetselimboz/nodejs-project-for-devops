@@ -68,6 +68,28 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    expose:
+      - "8081"
+    environment:
+      - ME_CONFIG_MONGODB_SERVER=mongo
+      - ME_CONFIG_BASICAUTH_USERNAME=selim_admin
+      - ME_CONFIG_BASICAUTH_PASSWORD=Ahmet+401292
+      - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
