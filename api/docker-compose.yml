@@ -10,6 +10,8 @@ services:
     depends_on:
       - api
       - grafana
+      - prometheus
+      - mongo-express
     restart: unless-stopped
   api:
     image: asb00/nodejs-devops-api:latest # Docker Hub'daki imajı işaret et
@@ -79,6 +81,8 @@ services:
       - ME_CONFIG_BASICAUTH_USERNAME=selim_admin
       - ME_CONFIG_BASICAUTH_PASSWORD=Ahmet+401292
       - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
+      # Nginx altında /mongo-express/ subpath ile sunulduğu için asset'lerin doğru yüklenmesi gerekir
+      - ME_CONFIG_SITE_BASEURL=/mongo-express/
     depends_on:
       - mongo
     restart: unless-stopped
@@ -140,9 +144,10 @@ services:
   loki:
     image: grafana/loki:latest
     container_name: loki
-    ports:
-      - "3100:3100"
+    expose:
+      - "3100"
     command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
 
   promtail:
     image: grafana/promtail:latest
@@ -151,6 +156,7 @@ services:
       - ./logs:/var/log/api-logs # API loglarını Promtail'e bağla
       - ./promtail-config.yaml:/etc/promtail/config.yaml
     command: -config.file=/etc/promtail/config.yaml
+    restart: unless-stopped
 
   node-exporter:
     image: prom/node-exporter:latest
