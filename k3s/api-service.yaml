@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nodejs-api-service
+spec:
+  type: NodePort
+  selector:
+    app: nodejs-api
+  ports:
+    - port: 80
+      targetPort: 3000
+      nodePort: 30395 # Tarayıcıdan erişeceğin port

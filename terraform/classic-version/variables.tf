@@ -23,7 +23,7 @@ variable "serverspace_token" {
 }
 
 variable "server_name" {
-  default = "nodejs-api-prod"
+  default = "kubernetes-server"
 }
 
 variable "region" {

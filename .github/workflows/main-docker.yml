@@ -1,0 +1,52 @@
+
+on:
+  push:
+    branches: [ "test" ] # Sadece main branch'ine push yapıldığında çalışır
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Dependencies
+        run: npm install --prefix api # api dizinindeki bağımlılıkları yükle [8]
+        
+      - name: Run Unit Tests
+        run: npm test --prefix api # Jest testlerini koştur [11]
+
+  docker-build-push:
+    needs: build-and-test # Sadece testler geçerse başla [3]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+      - name: Build and Push
+        uses: docker/build-push-action@v5
+        with:
+          context: ./api
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/nodejs-devops-api:latest
+
+  deploy-to-server:
+    needs: docker-build-push # Sadece imaj hazırsa başla [4]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executing remote ssh commands
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: 2222
+          script: |
+            cd ~/nodejs-project-for-devops
+            git pull origin main
+            cd api
+            docker compose pull # Yeni imajı Docker Hub'dan çek
+            docker compose up -d # Konteynerleri güncelle ve arkada çalıştır

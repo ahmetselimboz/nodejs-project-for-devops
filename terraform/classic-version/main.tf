@@ -4,8 +4,8 @@ resource "serverspace_server" "api_node" {
   image    = "Ubuntu-25.10-X64"
   location = var.region
   
-  cpu      = 1    # Node.js ve monitoring için başlangıçta yeterli [4]
-  ram      = 1024 # 1GB RAM
+  cpu      = 2    # Node.js ve monitoring için başlangıçta yeterli [4]
+  ram      = 4096 # 1GB RAM
   boot_volume_size = 25600 # 25GB Disk alanı
 
   # Oluşturduğumuz SSH anahtarını bu sunucuya bağlıyoruz
@@ -24,22 +24,6 @@ resource "serverspace_server" "api_node" {
     bandwidth = 0
   }
 
-  connection {
-    host = self.public_ip_addresses[0]
-    user = "root"
-    type = "ssh"
-    private_key = file(var.ssh_key_path)
-    timeout = "2m"
-  }
-
-  provisioner "remote-exec" {
-    inline = [
-      "export PATH=$PATH:/usr/bin",
-      "sudo apt-get update",
-      "sudo apt-get install -y redis-server",
-      "exit 0"
-    ]
-  }
 
 }
 
