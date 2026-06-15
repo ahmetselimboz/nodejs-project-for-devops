@@ -15,9 +15,9 @@ jobs:
         with:
           node-version: '20'
       - name: Install dependencies
-        run: npm install # Bağımlılıkları kurar [5]
+        run: npm install --prefix api # Bağımlılıkları kurar [5]
       - name: Run Tests
-        run: npm test || echo "Testler henüz tanımlanmamış" # Otomatik testleri çalıştırır [6]
+        run: npm test --prefix api || echo "Testler henüz tanımlanmamış" # Otomatik testleri çalıştırır [6]
 
   # 2. Aşama: Docker İmajını Oluşturma ve Pushlama
   docker-push:
