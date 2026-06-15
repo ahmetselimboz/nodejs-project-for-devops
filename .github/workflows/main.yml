@@ -33,6 +33,7 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
+          context: ./api
           push: true
           tags: asb00/nodejs-devops-api:latest # Docker imajın [7]
 
@@ -47,6 +48,7 @@ jobs:
           host: ${{ secrets.K8S_SERVER_IP }}
           username: root
           key: ${{ secrets.K8S_SSH_KEY }}
+          port: 2222
           script: |
             # K8s konfigürasyonlarını güncelle ve podları yeniden başlat
             kubectl rollout restart deployment nodejs-api
