@@ -13,7 +13,7 @@ const i18n = new I18n();
  * Kubernetes restarts the container if this endpoint doesn't respond.
  */
 router.get('/live', (req, res) => {
-    Response.successResponse(res, HTTP_CODES.OK, i18n.translate('HEALTH.ALIVE'));
+    Response.successResponse(res, HTTP_CODES.OK, "Yaşıyor yaşıyor yaşıyoooorrrrrr");
 });
 
 /**
