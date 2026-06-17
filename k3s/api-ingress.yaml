@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: api-ingress
+  annotations:
+    # K3s varsayılan olarak Traefik kullanır, bu yüzden sınıfı belirtiyoruz
+    kubernetes.io/spec.ingressClassName: "traefik" 
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" # Otomatik sertifika için
+spec:
+  rules:
+  - host: api.selimboz.com # Senin gerçek domain adın
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: nodejs-api-service # Mevcut servis adın [3]
+            port:
+              number: 80 # Servisin iç portu [3]
+  tls:
+  - hosts:
+    - api.selimboz.com
+    secretName: api-selimboz-com-tls # Sertifika buraya kaydedilecek
