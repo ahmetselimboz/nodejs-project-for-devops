@@ -1,0 +1,130 @@
+Main Responsibilities
+* Develop and maintain applications using NodeJS with clean, efficient, and scalable code.
+* Design and implement high-performance backend services using Fastify, ensuring low latency and high throughput.
+* Manage real-time data streaming and caching strategies using Kafka and Redis.
+* Build, containerize, and orchestrate applications using Docker and Kubernetes to ensure seamless deployment across environments.
+* Integrate and manage database layers using TypeORM, ensuring data integrity and optimized queries.
+* Implement and monitor system performance and tracing using OpenTelemetry to maintain high system reliability.
+* Conduct thorough code reviews and ensure the codebase meets quality, security, and efficiency standards.
+* Communicate technical concepts clearly and effectively to both technical teams and cross-functional stakeholders.
+* Stay current with emerging technologies and best practices, suggesting innovations to improve system architecture and developer experience.
+
+
+Qualifications / Technical Skills
+* Bachelor’s degree in Computer Engineering, Computer Science, or a related field.
+* Minimum 6 years of hands-on experience in NodeJS development.
+* Strong proficiency in TypeScript and modern JavaScript patterns.
+* Experience with SOAP/REST services, API Gateway solutions, integration patterns (EIP), messaging systems (e.g., Kafka, RabbitMQ), file-based integrations, synchronous/asynchronous communication, fault tolerance, resiliency, high availability, and distributed system architectures.
+* Familiarity with ORM tools, preferably TypeORM.
+* Solid knowledge of Docker and Kubernetes orchestration.
+* Proficient in Git version control and collaborative workflows.
+* Experience working with relational databases (SQL) and database design.
+* Strong communication and interpersonal skills.
+* Result-oriented team player with analytical problem-solving abilities.
+* Fluency in written and spoken English.
+* Ability to approach AI with curiosity and intention, actively incorporating AI-powered tools into workflows to enhance productivity and drive innovation.  Aranan Nitelikler:
+* İlgili mühendislik alanlarında lisans eğitimini tamamlamış
+* Alanında 1-3 yıl deneyimli
+* Kullanıcı yoğunluğu yüksek hacimli projelerde deneyim sahibi (tercihen)
+* Modern Java (Java 8 sonrası) ve Spring Boot ile uygulama geliştirme konusunda tecrübeli
+* İlişkisel veritabanları ve SQL sorgularında deneyim sahibi (tercihen Oracle)
+* Kafka ve Redis gibi teknolojilerde pratikte çalışmış
+* OpenShift, Docker, Kubernetes teknolojilerinde bilgi sahibi
+* Tercihen DDD ve Microservice mimari konusunda bilgi sahibi
+* Kod geliştirmeleri için yeni teknolojileri takip eden
+* Agile metodunda Scrum yönteminde deneyimli olmak
+* 
+* Görev ve Sorumluluklar:
+* Yazılım geliştirme süreçlerinde aktif rol almak,
+* Uygulama modernizasyonunda teknik tasarım ve uygulama geliştirme süreçlerinde rol almak,
+* Yüksek hacimli online ve batch sistemlerin güvenli ve sürdürülebilir şekilde geliştirilmesinde rol almak,
+* Agile metodolojileri kullanarak projelerin zamanında teslim edilmesini sağlamak,
+* Yazılım hatalarını tespit etmek, çözmek ve performans iyileştirmeleri yapmak,
+* Kullandığı yazılım araçları/dilleri ile ilgili teknolojik yenilikleri takip etmek,
+* Yazılım geliştirme süreçlerini sürekli olarak optimize etmek ve iyileştirme önerileri sunmak.
+*   
+* Genel Nitelikler:
+* Üniversitelerin Bilgisayar Mühendisliği, Yazılım Mühendisliği gibi bölümlerinden lisans derecesi mezunu,
+* DevOps, SRE, Platform veya Altyapı Mühendisliği pozisyonlarında en az 3 yıl deneyimli,
+* Linux sistem yönetimi konusunda ileri düzey bilgili, (Ubuntu, Debian, CentOS vb.)
+* Proxmox veya benzeri sanallaştırma platformlarını kullanabilen,
+* Docker, Docker Compose, Docker Swarm kullanabilen,
+* Ansible ve Terraform ile Infrastructure as Code (IaC) yönetimi yapabilen,
+* Kubernetes kurulumu, yönetimi ve operasyonel süreçlerine hakim,
+* GitLab CI/CD ile pipeline geliştirme yapabilen,
+* Prometheus, Alertmanager ve Grafana ile izleme yapabilen,
+* ELK, Loki veya benzeri loglama çözümleri yapabilen,
+* MongoDB, PostgreSQL, Redis ve MQTT protokollerine hakim,
+* DNS, HTTP/HTTPS, TCP/IP, firewall, load balancer, reverse proxy gibi temel network prensiplerinde yetkinlik sahibi,
+* Yedekleme, geri yükleme ve felaket kurtarma (DR) süreçlerinde deneyim sahibi,
+* Analitik düşünme becerisi, güçlü problem çözme yetkinliği ve ekip çalışmasına yatkınlığına sahip,
+* Takım çalışmasına yatkınlık ve güçlü iş birliği becerisine sahip,
+* Çevik çalışma kültürüne uyum ve hızlı adapte olma becerisine sahip,
+* Analitik düşünme yeteneği ve veri odaklı karar verebilme yetkinliğine sahip,
+* Karmaşık teknik problemleri hızlı ve sistematik şekilde çözebilme yeteniğine sahip,
+* Sorumluluk bilinci yüksek, proaktif ve sonuç odaklı çalışma becerisine sahip olan.
+* 
+* Tercih Edilen Nitelikler
+* AWS, GCP, Azure veya Hetzner gibi bulut sağlayıcılarıyla çalışma deneyimi olan,
+* Ceph, Longhorn veya benzeri dağıtık depolama çözümleri hakkında bilgi sahibi olan,
+* Kafka, RabbitMQ veya benzeri dağıtık mesajlaşma sistemlerinde uygulamalı deneyimli olan,
+* Güvenlik alanında sertifikalar veya SOC benzeri operasyonel güvenlik süreçlerinde tecrübeli olan,
+* Yüksek trafiğe sahip üretim ortamlarında performans, ölçeklendirme ve optimizasyon deneyimi olan.
+* 
+* İş Tanımı
+* Proxmox, VMware ve Linux tabanlı sunucular üzerinde altyapının tasarlanması, kurulumu ve yönetilmesi,
+* Ansible ve Terraform kullanarak ortamların otomasyonu ve IaC prensiplerinin uygulanması,
+* Docker tabanlı iş yüklerinin yönetilmesi ve optimize edilmesi,
+* On-premise veya bulut ortamlarında Kubernetes kümelerinin kurulumu, bakımı, güncellenmesi ve ölçeklendirilmesi,
+* Helm chart’ları, operator’lar ve özel Kubernetes yapılarının geliştirilmesi,
+* Rolling deployment, canary release ve self-healing mekanizmalarının tasarlanması,
+* GitLab CI/CD pipeline’larının oluşturulması, test-build-deployment aşamalarının yönetilmesi,
+* İzleme, uyarı ve loglama sistemlerinin (Prometheus, Grafana, ELK/Loki) tasarlanması ve yönetilmesi,
+* Veritabanları ve mesajlaşma sistemlerinin yüksek erişilebilirlik (HA), kümeleme (clustering) ve optimizasyon süreçlerinin yürütülmesi,
+* Güvenlik, secret management, load balancing ve trafik yönlendirme süreçlerinin uygulanması
+* Yedekleme, geri yükleme ve felaket kurtarma stratejilerinin geliştirilmesi ve sürdürülmesi.
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+* 
+GENEL NİTELİKLER:
+* Bilgisayar Mühendisliği, Yazılım Mühendisliği veya ilgili mühendislik alanlarında lisans derecesine sahip olmak veya eşdeğer pratik deneyime sahip olmak,
+* Linux (tercihen Ubuntu/CentOS) sistem yönetimine hakim olmak,
+* Docker ve container mantığına hakim olmak,
+* Kubernetes temel bileşenlerine (Pod, Service, Ingress, Deployment, HPA vb.) hakim olmak,
+* CI/CD araçlarından en az birine (GitLab CI, GitHub Actions, Jenkins vb.) hakim olmak,
+* Networking temellerini (TCP/IP, DNS, NAT, Load Balancer, Firewall) bilmek,
+* Monitoring & logging kavramlarına hakim olmak,
+* Problem çözme ve analitik düşünme yeteneği,
+* Kriz anlarında sakin ve sistematik hareket edebilme yeteneğine sahip,
+* Dokümantasyona önem veren,
+* Takım çalışmasına yatkın,
+* Öğrenmeye ve kendini geliştirmeye açık,
+* Gerektiğinde on-call / nöbet sistemine (dönüşümlü) uyum sağlayabilecek,
+* Kritik sistemlerde kesintiyi minimuma indirme sorumluluğu bilincinde olan,
+* Esnek çalışma saatlerine (operasyonel gereksinimlere bağlı) uyum sağlayabilecek.
+TERCİH NEDENİ OLABİLECEK EK NİTELİKLER:
+* AWS (EC2, VPC, ALB/NLB, RDS, IAM, CloudWatch) tecrübesine sahip olmak,
+* Huawei Cloud (HWC) veya farklı cloud sağlayıcı deneyimi olan,
+* Infrastructure as Code (Terraform, Ansible, Helm) bilgisi olan,
+* Prometheus, Grafana, Loki, ELK bilgisi olan,
+* OpenStack, Ceph, Couchbase, Elasticsearch gibi sistemlerle çalışma deneyimi olan,
+* On-call / incident management tecrübesi olan,
+* Bash / Python gibi dillerle otomasyon scriptleri geliştirebilen,
+* Altyapı ve operasyon süreçlerinde kod inceleme (code review) kültürüne uyum sağlayabilecek.
+
+ Deneyim ve Yetkinlikler :
+* AWS servislerinde (özellikle Lambda, DynamoDB, RDS) minimum 1 yıl deneyim
+* ECS, EKS, ECR, Kubernetes ve Helm (charts, releases, upgrades) konusunda güçlü bilgi
+* GitLab veya Bitbucket CI/CD pipeline yönetimi, otomatik deployment deneyimi
+* Terraform bilgisi (Infrastructure as Code)
+* Elasticsearch ve Kibana (ELK) bilgisi
+* Prometheus, Grafana, Alertmanager, Instana, CloudWatch gibi monitoring & alerting sistemleri konusunda deneyim
+* AWS WAF ve Cloudflare ile çalışma tecrübesi
+* Jira, Confluence gibi proje yönetim araçlarına hakimiyet
+
+Tercihen: AWS Certified DevOps Engineer veya AWS Certified Solutions Architect sertifikası
