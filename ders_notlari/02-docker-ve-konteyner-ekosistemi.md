@@ -311,6 +311,84 @@ sudo rm -rf /var/lib/containerd
 sudo rm /etc/apt/sources.list.d/docker.list
 ```
 
+## 7. Görev 2.4: Yol A (Host Nginx Edge Proxy) Entegrasyonu
+
+*Bu kısım, sunucumuzda host düzeyindeki Nginx ile Docker konteynerlerini çakıştırmadan birlikte çalıştırmak için uyguladığımız Yol A mimarisinin detaylarını dökümante eder.*
+
+### A. Port Çakışması Sorunu ve Mimari Tasarım
+* **Sorun:** Host işletim sisteminde kurulu olan Nginx 80/443 portlarını dinlemektedir. Docker Compose içindeki Nginx de 80/443 portlarını dinlemeye çalışırsa port çakışması (Port Collision) yaşanır ve konteynerler ayağa kalkmaz.
+* **Çözüm (Yol A):** 
+  * Docker Compose içindeki Nginx servisini devre dışı bırakırız.
+  * Konteynerlerimizin portlarını dış dünyaya değil, sadece localhost arayüzüne (`127.0.0.1`) eşleriz. Bu sayede veritabanları veya API'ler dışarıdan doğrudan taranamaz.
+  * Host Nginx, dışarıdan gelen HTTPS isteklerini karşılar, şifrelemeyi çözer (SSL Termination) ve yerel ağdaki Docker portlarına yönlendirir.
+
+---
+
+### B. Adım Adım Uygulama Adımları
+
+#### 1. Proje [docker-compose.yml](file:///Users/selimboz/Documents/GitHub/nodejs-project-for-devops/api/docker-compose.yml) Güncellemesi
+Nginx servisini yorum satırına alıp diğer servisleri localhost portlarına bağladık. API 3000 portunu kullandığı için Grafana'yı host üzerinde 3001 portuna yönlendirdik:
+* API Port Eşleme: `127.0.0.1:3000:3000`
+* Grafana Port Eşleme: `127.0.0.1:3001:3000`
+* Prometheus Port Eşleme: `127.0.0.1:9090:9090`
+* Mongo Express Port Eşleme: `127.0.0.1:8081:8081`
+
+#### 2. Host Nginx Yapılandırmasının Güncellenmesi
+Sunucumuzdaki `/etc/nginx/sites-available/api.selimboz.com` dosyasını açarak 443 SSL bloğunun içerisine diğer servislerin yönlendirmelerini (location bloklarını) ekleriz:
+```nginx
+# Node.js API Yönlendirmesi
+location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Grafana Yönlendirmesi
+location /grafana/ {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# Prometheus Yönlendirmesi
+location /prometheus/ {
+        proxy_pass http://127.0.0.1:9090;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+# Mongo Express Yönlendirmesi
+location /mongo-express/ {
+        proxy_pass http://127.0.0.1:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+```
+*Yapılandırmayı kaydettikten sonra `sudo nginx -t` çalıştırıp hata yoksa `sudo systemctl restart nginx` ile Nginx'i güncelleriz.*
+
+---
+
+### C. Hata Giderme (Troubleshooting) ve Geri Alma (Rollback)
+
+#### Hata Arama (Troubleshooting):
+* **Konteynerlerin Durumu:** `docker compose ps`
+* **Logları Canlı İzleme:** `docker compose logs -f` (veya belirli servis için `docker compose logs -f api`)
+* **Port Bağlantılarını Kontrol Etme:** `sudo ss -tulpn | grep -E "3000|3001|9090|8081"`
+  *Bu komutla portların sadece `127.0.0.1` (localhost) tarafından dinlendiğini doğrulamalıyız. `0.0.0.0` veya `*` olmamalıdır.*
+
+#### Geri Alma (Rollback) Stratejisi:
+Eğer Yol A sunucuda çalışmazsa ve Yol B'ye (All-in-Docker) geçmek istersek:
+1. Host Nginx durdurulur ve devre dışı bırakılır: `sudo systemctl stop nginx && sudo systemctl disable nginx`
+2. `docker-compose.yml` içindeki `nginx` servisi yorum satırından çıkarılır ve portları `80:80` ve `443:443` şeklinde hosta eşlenir.
+3. `/etc/letsencrypt` dizini volume olarak Nginx konteynerine bağlanır.
+4. `docker compose up -d --build` ile sistem Dockerized Nginx üzerinden ayağa kaldırılır.
+
 ---
 
 ## Ders 2 Kendi Kendine Sorular (Troubleshooting & Mülakat Soruları)

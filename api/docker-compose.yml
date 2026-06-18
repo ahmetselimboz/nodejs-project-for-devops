@@ -1,23 +1,26 @@
 services:
-  nginx:
-    image: nginx:alpine
-    container_name: reverse-proxy
-    ports:
-      - "80:80"   # Sadece bu portu dış dünyaya açıyoruz
-      - "443:443" # İleride SSL için
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - api
-      - grafana
-      - prometheus
-      - mongo-express
-    restart: unless-stopped
+  # Nginx servisini container seviyesinde devre dışı bırakıyoruz (YOL A: Host Nginx kullanılacak)
+  # nginx:
+  #   image: nginx:alpine
+  #   container_name: reverse-proxy
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/nginx.conf:ro
+  #   depends_on:
+  #     - api
+  #     - grafana
+  #     - prometheus
+  #     - mongo-express
+  #   restart: unless-stopped
+
   api:
-    image: asb00/nodejs-devops-api:latest # Docker Hub'daki imajı işaret et
+    image: asb00/nodejs-devops-api:latest # Docker Hub veya yerelde build edilen imaj
     container_name: nodejs-devops-api
-    expose:
-      - "3000"
+    # Portu sadece host localhost'una (127.0.0.1) bağlıyoruz ki dışarıdan direkt erişilemesin
+    ports:
+      - "127.0.0.1:3000:3000"
     volumes:
       - ./logs:/app/logs
     environment:
@@ -74,14 +77,13 @@ services:
   mongo-express:
     image: mongo-express:latest
     container_name: mongo-express
-    expose:
-      - "8081"
+    ports:
+      - "127.0.0.1:8081:8081" # Sadece host localhost'una açıyoruz
     environment:
       - ME_CONFIG_MONGODB_SERVER=mongo
       - ME_CONFIG_BASICAUTH_USERNAME=selim_admin
       - ME_CONFIG_BASICAUTH_PASSWORD=Ahmet+401292
       - ME_CONFIG_MONGODB_ENABLE_ADMIN=true
-      # Nginx altında /mongo-express/ subpath ile sunulduğu için asset'lerin doğru yüklenmesi gerekir
       - ME_CONFIG_SITE_BASEURL=/mongo-express/
     depends_on:
       - mongo
@@ -94,6 +96,7 @@ services:
         reservations:
           cpus: '0.25'
           memory: 256M
+
   prometheus:
     image: prom/prometheus:latest
     container_name: prometheus
@@ -102,9 +105,9 @@ services:
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--web.external-url=http://45.138.25.195/prometheus/'
-    expose:
-      - "9090"
+      - '--web.external-url=https://api.selimboz.com/prometheus/'
+    ports:
+      - "127.0.0.1:9090:9090" # Sadece host localhost'una açıyoruz
     restart: unless-stopped
     deploy:
       resources:
@@ -127,10 +130,12 @@ services:
       - GF_SMTP_FROM_ADDRESS=ahmetselimboz@selimboz.com
       - GF_SMTP_FROM_NAME=Grafana-Alerts
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
-      - GF_SERVER_ROOT_URL=http://45.138.25.195/grafana/
+      - GF_SERVER_ROOT_URL=https://api.selimboz.com/grafana/
       - GF_SERVER_SERVE_FROM_SUB_PATH=true
     volumes:
       - grafana-data:/var/lib/grafana
+    ports:
+      - "127.0.0.1:3001:3000" # API portu (3000) ile çakışmaması için hostta 3001'e eşliyoruz
     restart: unless-stopped
     deploy:
       resources:
@@ -153,7 +158,7 @@ services:
     image: grafana/promtail:latest
     container_name: promtail
     volumes:
-      - ./logs:/var/log/api-logs # API loglarını Promtail'e bağla
+      - ./logs:/var/log/api-logs
       - ./promtail-config.yaml:/etc/promtail/config.yaml
     command: -config.file=/etc/promtail/config.yaml
     restart: unless-stopped
@@ -186,4 +191,3 @@ volumes:
   mongo-data:
   prometheus-data:
   grafana-data:
-  
