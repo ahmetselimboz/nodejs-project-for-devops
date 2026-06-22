@@ -1,8 +1,3 @@
-resource "serverspace_ssh" "terraform" {
-  name = "terraform-key"
-  public_key = file(var.ssh_key_path)
-}
-
 variable "ssh_key_path" {
   type        = string
   description = "The file path to an ssh public key"

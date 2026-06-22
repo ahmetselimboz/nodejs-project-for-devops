@@ -1,0 +1,103 @@
+---
+- name: Sunucu Hazırlama ve Docker Kurulum Otomasyonu
+  hosts: devops_servers
+  become: yes # Komutları sudo yetkisiyle çalıştırır
+  vars:
+    target_ports:
+      - '2222'
+      - '80'
+      - '443'
+
+  tasks:
+    # 1. Aşama: Paket Güncellemeleri
+    - name: Sistem paket depolarını güncelle ve yükselt (apt upgrade)
+      apt:
+        update_cache: yes
+        upgrade: safe
+
+    - name: Temel araçları kur (curl, ca-certificates, gnupg)
+      apt:
+        name:
+          - curl
+          - ca-certificates
+          - gnupg
+          - fail2ban
+        state: present
+
+    # 2. Aşama: Güvenlik Duvarı (UFW)
+    - name: Gerekli portlara UFW üzerinden izin ver
+      ufw:
+        rule: allow
+        port: "{{ item }}"
+        proto: tcp
+      loop: "{{ target_ports }}"
+
+    - name: UFW Güvenlik Duvarını aktif et
+      ufw:
+        state: enabled
+
+    # 3. Aşama: Docker Depo Hazırlığı (Senior Codenames Yönetimi)
+    - name: Docker GPG anahtarı için dizin oluştur
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Docker GPG anahtarını indir
+      get_url:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+
+    # Ubuntu 25.10 (plucky) uyuşmazlığını aşmak için sürüm kontrolü yapıyoruz
+    - name: Ubuntu kod adını belirle (plucky ise noble sürümüne eşle)
+      set_fact:
+        docker_codename: "{{ 'noble' if ansible_facts['distribution_release'] == 'plucky' else ansible_facts['distribution_release'] }}"
+
+    - name: Docker resmi reposunu APT kaynaklarına ekle
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu {{ docker_codename }} stable"
+        state: present
+        filename: docker
+
+    # 4. Aşama: Docker ve Eklentilerinin Kurulması
+    - name: Docker Engine, CLI ve Docker Compose eklentisini kur
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+        update_cache: yes
+
+    # 5. Aşama: Yetkilendirme (Sudo-less Docker)
+    - name: devops kullanıcısını docker grubuna ekle
+      user:
+        name: devops
+        groups: docker
+        append: yes
+
+    # 6. Aşama: Fail2Ban Yapılandırma Otomasyonu
+    - name: Fail2Ban jail.local dosyasını şablon olarak oluştur
+      copy:
+        dest: /etc/fail2ban/jail.local
+        content: |
+          [DEFAULT]
+          bantime = 1h
+          findtime = 10m
+          maxretry = 3
+
+          [sshd]
+          enabled = true
+          port = 2222
+          backend = systemd
+        mode: '0644'
+      notify: restart fail2ban
+
+  handlers:
+    - name: restart fail2ban
+      service:
+        name: fail2ban
+        state: restarted

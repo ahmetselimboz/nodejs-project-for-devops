@@ -1,3 +1,8 @@
+resource "serverspace_ssh" "terraform" {
+  name       = "terraform-key"
+  public_key = file(var.ssh_key_path)
+}
+
 # 2. Node.js API ve İzleme Araçlarının (Grafana/Loki) çalışacağı sunucu
 resource "serverspace_server" "api_node" {
   name     = var.server_name

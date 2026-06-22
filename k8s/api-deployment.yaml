@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: nodejs-devops-api:v1 # Kendi oluşturduğun imaj [10]
+        image: asb00/nodejs-devops-api:latest # Kendi oluşturduğun imaj [10]
         ports:
         - containerPort: 3000
         env:

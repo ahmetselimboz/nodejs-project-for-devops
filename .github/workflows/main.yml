@@ -2,7 +2,7 @@ name: Node.js CI/CD Pipeline
 
 on:
   push:
-    branches: [ "main" ] # Sadece main branch'ine push yapıldığında çalışır [4]
+    branches: [ "test" ] # Sadece main branch'ine push yapıldığında çalışır [4]
 
 jobs:
   # 1. Aşama: Test ve Build
