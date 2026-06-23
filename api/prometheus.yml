@@ -5,6 +5,6 @@ scrape_configs:
   - job_name: 'sunucu-donanim'
     static_configs:
       - targets: ['node-exporter:9100']
-  - job_name: 'nodejs-api'
+  - job_name: 'nodejs-api-k8s'
     static_configs:
-      - targets: ['api:3000'] 
+      - targets: ['78.111.90.75:30080'] 
