@@ -160,6 +160,7 @@ services:
     volumes:
       - ./logs:/var/log/api-logs
       - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - /var/log/pods:/var/log/pods:ro
     command: -config.file=/etc/promtail/config.yaml
     restart: unless-stopped
 

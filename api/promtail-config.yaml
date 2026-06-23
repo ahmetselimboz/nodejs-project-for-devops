@@ -11,4 +11,12 @@ scrape_configs:
           - localhost
         labels:
           job: api-logs
-          __path__: /var/log/api-logs/*.log # JSON loglarının yolu
+          __path__: /var/log/api-logs/*.log
+
+  - job_name: kubernetes-pods
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: kubernetes-logs
+          __path__: /var/log/pods/**/*.log
