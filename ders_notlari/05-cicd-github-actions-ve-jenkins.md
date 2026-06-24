@@ -102,6 +102,29 @@ Jenkins pipeline'ları projenin kök dizinindeki `Jenkinsfile` dosyasında kod o
 | **Yapılandırma** | YAML dosyaları kullanılır. Öğrenmesi ve yazması çok kolaydır. | Jenkinsfile (Groovy) veya GUI üzerinden kurulur. Öğrenme eğrisi daha diktir. |
 | **Kaynak Tüketimi** | GitHub sunucularını kullandığı için kendi sunucundan RAM/CPU yemez. | Kendi sunucunda çalıştığı için özellikle Java mimarisi nedeniyle yüksek RAM tüketir. |
 
+### A. Firmalar Neden Hala Jenkins'i Tercih Ediyor? (İlanlardaki Jenkins Gizemi)
+
+Günümüzde GitHub Actions, GitLab CI gibi modern bulut çözümleri varken, iş ilanlarında hala neden yoğun bir şekilde **Jenkins** bilgisi arandığının senior sebepleri şunlardır:
+
+1. **Maliyet ve Ölçek (Milyonlarca Build):**
+   * GitHub Actions veya GitLab CI gibi SaaS araçları derleme dakikaları (build minutes) üzerinden ücretlendirilir.
+   * Günde binlerce kez build alan büyük bir şirkette aylık SaaS faturaları on binlerce doları bulabilir.
+   * Jenkins ise tamamen ücretsiz ve açık kaynaklıdır. Şirketler kendi donanımları (On-premise sunucular) üzerine Jenkins kurarak sadece elektrik/donanım parası öder, build dakikası sınırına takılmazlar.
+
+2. **Veri Güvenliği ve Regülasyonlar (BDDK, KVKK, HIPAA):**
+   * Bankalar, savunma sanayii firmaları, devlet kurumları ve sağlık şirketleri kodlarını veya build esnasında kullanılan hassas çevre değişkenlerini (secrets) bulut sağlayıcılarına (GitHub/GitLab) teslim edemezler.
+   * Jenkins, tamamen kapalı bir iç ağda (Air-gapped network), internete hiç bağlanmadan çalışacak şekilde yapılandırılabilir.
+
+3. **Devasa Eklenti (Plugin) Ekosistemi:**
+   * Jenkins yaklaşık 20 yıllık bir geçmişe sahiptir. Piyasada var olan en eski ana bilgisayar (Mainframe) sistemlerinden en yeni Kubernetes araçlarına kadar hemen hemen her şey için yazılmış bir Jenkins eklentisi mevcuttur.
+
+4. **Groovy ile Sınırsız Esneklik:**
+   * GitHub Actions YAML dosyaları deklaratiftir, karmaşık mantıksal döngüleri (if-else, try-catch, dinamik paralel iş çalıştırma) yazmak zordur.
+   * Jenkins, pipeline kodlamada programlama dili olan **Groovy**'i kullanır. Bu sayede pipeline içinde algoritma yazar gibi sınırsız esneklikte iş akışları tasarlanabilir.
+
+5. **Miras Altyapılar (Legacy Pipelines):**
+   * Büyük şirketlerin 10 yıldır tıkır tıkır çalışan yüzlerce Jenkins pipeline'ı vardır. Bu devasa yapıları modern sistemlere göç ettirmek (migration) hem çok risklidir hem de aylar sürecek bir iş gücü maliyetidir.
+
 ---
 
 ## 6. Mikroservis CI/CD Stratejileri
